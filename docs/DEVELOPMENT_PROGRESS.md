@@ -62,6 +62,7 @@
 - Foreground Summary 改为基于“今天运行过的可见应用”统计，后台仍打开的应用会继续累计；QQ 音乐等播放器只进入 Background Music，不再混入应用摘要。
 - 前端访客计数改为浏览器生成 viewer id 后上报，避免同一来源地址下永远只显示 1 人正在看。
 - 扩展应用状态文案，按聊天、浏览器、IDE、设计、视频、音乐、游戏、办公等类别生成更贴近参考稿的轻松描述。
+- 应用状态文案进一步直接对齐参考实现的大字典和标题模板，并增加别名 / 子串匹配，提升命中率。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。
