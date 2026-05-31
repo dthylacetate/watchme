@@ -72,6 +72,22 @@ export function createApp(context?: Partial<AppContext>) {
     await next();
   });
 
+  app.use("/api/device", async (c, next) => {
+    const authHeader = c.req.header("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return unauthorized();
+    }
+
+    const token = authHeader.slice("Bearer ".length).trim();
+    const device = config.deviceTokens.get(token);
+    if (!device) {
+      return unauthorized();
+    }
+
+    c.set("device", device);
+    await next();
+  });
+
   app.get("/api/health", (c) => {
     return c.json({
       status: "ok",
@@ -88,6 +104,16 @@ export function createApp(context?: Partial<AppContext>) {
       siteFavicon: config.siteFavicon
     });
     return c.json(payload);
+  });
+
+  app.get("/api/device", (c) => {
+    const device = c.get("device");
+    return c.json({
+      ok: true,
+      device_id: device.deviceId,
+      device_name: device.deviceName,
+      platform: device.platform
+    });
   });
 
   app.post("/api/report", async (c) => {

@@ -39,6 +39,33 @@ function makeEnv() {
 }
 
 describe("server API", () => {
+  it("validates device bearer tokens", async () => {
+    const ctx = makeEnv();
+    try {
+      const okResponse = await ctx.app.request("/api/device", {
+        headers: {
+          authorization: "Bearer abc123"
+        }
+      });
+      expect(okResponse.status).toBe(200);
+      await expect(okResponse.json()).resolves.toMatchObject({
+        ok: true,
+        device_id: "desk-01",
+        device_name: "Desk",
+        platform: "windows"
+      });
+
+      const badResponse = await ctx.app.request("/api/device", {
+        headers: {
+          authorization: "Bearer wrong-token"
+        }
+      });
+      expect(badResponse.status).toBe(401);
+    } finally {
+      ctx.cleanup();
+    }
+  });
+
   it("stores reports and exposes current state", async () => {
     const ctx = makeEnv();
     try {

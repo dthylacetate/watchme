@@ -104,5 +104,5 @@ Agent 管理器窗口里也会实时给你显示这条 `.env` 示例。
 
 ## 已知限制
 
-- `Test Connection` 当前验证的是服务端可达和本地配置格式；真正的 Bearer token 是否匹配，会在后台开始上报时由服务端鉴权。
+- `Test Connection` 现在会同时验证服务端可达性和 Bearer token 鉴权；如果改了 server 端 `.env` 里的 `DEVICE_TOKEN_*`，记得先重启 server 再测试。
 - 媒体读取依赖 Windows Global System Media Transport Controls，部分播放器可能不暴露完整元数据。

@@ -315,6 +315,26 @@ class Reporter:
             reason = exc.reason if hasattr(exc, "reason") else exc
             raise RuntimeError(f"health check failed: {reason}") from exc
 
+    def check_device_auth(self) -> dict[str, Any]:
+        req = request.Request(
+            f"{self.server_url.rstrip('/')}/api/device",
+            headers={
+                "Accept": "application/json",
+                "Authorization": f"Bearer {self.token}",
+            },
+            method="GET",
+        )
+        try:
+            with self._opener.open(req, timeout=5) as response:
+                if not 200 <= response.status < 300:
+                    raise RuntimeError(f"device auth check failed with HTTP {response.status}")
+                return json.loads(response.read().decode("utf-8"))
+        except error.HTTPError as exc:
+            raise self._format_http_error("device auth check failed", exc) from exc
+        except error.URLError as exc:
+            reason = exc.reason if hasattr(exc, "reason") else exc
+            raise RuntimeError(f"device auth check failed: {reason}") from exc
+
     def send(self, app_id: str, window_title: str, extra: dict[str, Any]) -> bool:
         payload = {
             "app_id": app_id[:128],

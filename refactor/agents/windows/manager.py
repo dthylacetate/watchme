@@ -243,13 +243,21 @@ class AgentManagerApp:
             self.fields["server_url"].set(str(config["server_url"]))
             reporter = agent.Reporter(str(config["server_url"]), str(config["token"]))
             reporter.check_server_health()
+            device_info = reporter.check_device_auth()
         except Exception as exc:
             messagebox.showerror(MANAGER_TITLE, str(exc))
             self.status_var.set(f"Connection failed: {exc}")
             return
 
-        self.status_var.set("Server health check passed.")
-        messagebox.showinfo(MANAGER_TITLE, "Server health check passed.\n\nThe URL is reachable and the config was saved.")
+        device_name = str(device_info.get("device_name") or "Unknown device")
+        platform = str(device_info.get("platform") or "unknown")
+        self.status_var.set(f"Server auth check passed for {device_name}.")
+        messagebox.showinfo(
+            MANAGER_TITLE,
+            "Server and token check passed.\n\n"
+            f"Bound device: {device_name} ({platform})\n"
+            "The URL is reachable, the token is valid, and the config was saved.",
+        )
 
     def start_agent(self) -> None:
         try:

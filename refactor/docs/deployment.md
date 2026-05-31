@@ -32,6 +32,8 @@ Set-Location refactor\agents\windows
 6. 点 `Start Agent`
 7. 确认托盘中出现 WatchMe Agent Worker
 
+如果你刚修改过 server 侧 `.env` 中的 `DEVICE_TOKEN_*`，先重启 server，再点 `Test Connection`。因为 server 只会在启动时读取这些 token 映射。
+
 需要单独注册开机自启：
 
 ```powershell

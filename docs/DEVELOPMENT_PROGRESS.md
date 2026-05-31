@@ -55,6 +55,7 @@
 - 整理 `refactor/scripts/` 目录，拆分为 `build/` 和 `server/` 两组脚本。
 - 整理仓库根目录文档，把需求、架构、进度、路线图和分析附录统一迁移到 `docs/`。
 - 修复 Windows Agent 本地直连 server 时的健康检查兼容性：本地 URL 统一归一化并绕过系统代理，502 报错会带回响应内容。
+- 增加 `/api/device` 鉴权检查接口，并让 Windows Agent Manager 的 `Test Connection` 同时验证 URL 和 token。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。
