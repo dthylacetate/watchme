@@ -40,17 +40,21 @@ Set-Location refactor\agents\windows
 .\install-startup.ps1
 ```
 
+开机自启会在当前用户 Startup 文件夹中创建 `WatchMeAgent.lnk`，不需要管理员权限。
+
 停用 Agent 并做基础清理：
 
 ```powershell
 .\uninstall-agent.ps1
 ```
 
-只移除开机自启任务：
+只移除开机自启入口：
 
 ```powershell
 .\uninstall-startup.ps1
 ```
+
+这个脚本会删除 Startup 快捷方式，并尽量清理旧版本创建过的同名计划任务。
 
 ## Server 一键部署
 

@@ -3,12 +3,31 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+$startupDir = [Environment]::GetFolderPath("Startup")
+$removedAny = $false
 
-if ($null -eq $task) {
-  Write-Host "Scheduled task $TaskName was not found."
-  exit 0
+if (-not [string]::IsNullOrWhiteSpace($startupDir)) {
+  $shortcutPath = Join-Path $startupDir "$TaskName.lnk"
+  if (Test-Path -LiteralPath $shortcutPath) {
+    Remove-Item -LiteralPath $shortcutPath -Force
+    Write-Host "Startup shortcut $shortcutPath removed."
+    $removedAny = $true
+  }
 }
 
-Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
-Write-Host "Scheduled task $TaskName removed."
+# Compatibility cleanup for releases that registered a scheduled task.
+try {
+  $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+  if ($null -ne $task) {
+    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+    Write-Host "Scheduled task $TaskName removed."
+    $removedAny = $true
+  }
+}
+catch {
+  Write-Host "Scheduled task cleanup skipped: $($_.Exception.Message)"
+}
+
+if (-not $removedAny) {
+  Write-Host "Startup entry $TaskName was not found."
+}

@@ -311,7 +311,7 @@ class AgentManagerApp:
     def enable_startup(self) -> None:
         try:
             worker_path = str(BASE_DIR / WORKER_EXE_NAME)
-            result = run_script("install-startup.ps1", "-ExecutablePath", worker_path)
+            result = run_script("install-startup.ps1", "-ExecutablePath", worker_path, "-TaskName", STARTUP_TASK_NAME)
         except Exception as exc:
             messagebox.showerror(MANAGER_TITLE, str(exc))
             self.status_var.set(f"Enable startup failed: {exc}")
@@ -326,7 +326,7 @@ class AgentManagerApp:
 
     def disable_startup(self) -> None:
         try:
-            result = run_script("uninstall-startup.ps1")
+            result = run_script("uninstall-startup.ps1", "-TaskName", STARTUP_TASK_NAME)
         except Exception as exc:
             messagebox.showerror(MANAGER_TITLE, str(exc))
             self.status_var.set(f"Disable startup failed: {exc}")

@@ -1,17 +1,41 @@
 param(
-  [string]$ExecutablePath = ".\dist\WatchMeAgent\WatchMeAgentWorker.exe",
-  [string]$Arguments = ""
+  [string]$ExecutablePath = "",
+  [string]$Arguments = "",
+  [string]$TaskName = "WatchMeAgent"
 )
 
 $ErrorActionPreference = "Stop"
-$target = Resolve-Path $ExecutablePath
-if ([string]::IsNullOrWhiteSpace($Arguments)) {
-  $action = New-ScheduledTaskAction -Execute $target.Path
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+if ([string]::IsNullOrWhiteSpace($ExecutablePath)) {
+  $ExecutablePath = Join-Path $scriptDir "WatchMeAgentWorker.exe"
 }
-else {
-  $action = New-ScheduledTaskAction -Execute $target.Path -Argument $Arguments
+
+$target = Resolve-Path -LiteralPath $ExecutablePath
+$workingDirectory = Split-Path -Parent $target.Path
+$startupDir = [Environment]::GetFolderPath("Startup")
+if ([string]::IsNullOrWhiteSpace($startupDir)) {
+  throw "Could not resolve the current user's Startup folder."
 }
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName "WatchMeAgent" -Action $action -Trigger $trigger -Settings $settings -Description "Start WatchMe Windows agent at logon" -Force | Out-Null
-Write-Host "Scheduled task WatchMeAgent registered for $($target.Path) $Arguments"
+
+$shortcutPath = Join-Path $startupDir "$TaskName.lnk"
+$shell = New-Object -ComObject WScript.Shell
+$shortcut = $shell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath = $target.Path
+$shortcut.Arguments = $Arguments
+$shortcut.WorkingDirectory = $workingDirectory
+$shortcut.WindowStyle = 7
+$shortcut.Description = "Start WatchMe Windows agent at logon"
+$shortcut.Save()
+
+# Clean up older task-scheduler based installs when possible. This is best-effort
+# because removing scheduled tasks can require elevated permissions on some PCs.
+try {
+  $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+  if ($null -ne $task) {
+    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+  }
+}
+catch {
+}
+
+Write-Host "Startup shortcut $shortcutPath registered for $($target.Path) $Arguments"

@@ -53,6 +53,8 @@ python manager.py
 6. 点 `Start Agent`
 7. 需要开机自启时，再点 `Enable Startup`
 
+开机自启会在当前用户的 Startup 文件夹中创建 `WatchMeAgent.lnk`，不需要管理员权限。
+
 也可以执行：
 
 ```powershell
@@ -101,6 +103,8 @@ Agent 管理器窗口里也会实时给你显示这条 `.env` 示例。
 ```powershell
 .\uninstall-startup.ps1
 ```
+
+这个脚本会删除当前用户 Startup 文件夹里的 `WatchMeAgent.lnk`，并尽量清理旧版本创建过的同名计划任务。
 
 ## 已知限制
 

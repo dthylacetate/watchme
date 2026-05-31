@@ -1,6 +1,6 @@
 # WatchMe 开发进度
 
-更新时间：2026-05-31
+更新时间：2026-06-01
 
 ## 当前阶段
 
@@ -68,6 +68,7 @@
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。
+- 修复 Windows Agent 开机自启脚本，改用当前用户 Startup 快捷方式，避免普通用户注册计划任务时遇到权限问题，并兼容清理旧版本计划任务。
 
 ## 当前文档状态
 
