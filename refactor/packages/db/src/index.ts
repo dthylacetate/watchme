@@ -228,7 +228,11 @@ export function createDatabase(path: string): Database {
 
       if (input.extra?.music?.title) {
         const musicAppName = input.extra.music.app || "Music";
-        const mediaHash = `${musicAppName}\0${input.extra.music.artist || ""}\0${input.extra.music.title}`;
+        const mediaHash = JSON.stringify([
+          musicAppName,
+          input.extra.music.artist || "",
+          input.extra.music.title
+        ]);
         sqlite.prepare(
           `
             INSERT OR IGNORE INTO media_activities(
@@ -368,24 +372,29 @@ export function createDatabase(path: string): Database {
 }
 
 function computeDurationMinutes(startMs: number, endMs: number): number {
-  return Math.max(1, Math.ceil((endMs - startMs) / 60_000));
+  return Math.max(0, Math.floor((endMs - startMs) / 60_000));
 }
 
-function getActiveEndTime(
-  startMs: number,
+function getRunEndTime(
+  lastSampleMs: number,
   nextStartMs: number | undefined,
   currentEndMs: number | undefined
 ): number {
   if (typeof nextStartMs === "number") {
-    const gap = nextStartMs - startMs;
-    return gap > 2 * 60_000 ? startMs + 60_000 : nextStartMs;
+    const gap = nextStartMs - lastSampleMs;
+    return gap > 2 * 60_000 ? lastSampleMs : nextStartMs;
   }
 
-  if (typeof currentEndMs === "number" && currentEndMs > startMs) {
+  if (typeof currentEndMs === "number" && currentEndMs > lastSampleMs) {
     return currentEndMs;
   }
 
-  return startMs + 60_000;
+  return lastSampleMs;
+}
+
+function isNearSample(previousStartedAt: string, nextStartedAt: string): boolean {
+  const gap = new Date(nextStartedAt).getTime() - new Date(previousStartedAt).getTime();
+  return gap >= 0 && gap <= 2 * 60_000;
 }
 
 export function buildTimelineSegments(
@@ -407,6 +416,20 @@ export function buildTimelineSegments(
       continue;
     }
 
+    let lastInRun = row;
+    while (index + 1 < rows.length) {
+      const candidate = rows[index + 1];
+      if (!candidate
+        || candidate.device_id !== row.device_id
+        || candidate.app_id !== row.app_id
+        || candidate.title_hash !== row.title_hash
+        || !isNearSample(lastInRun.started_at, candidate.started_at)) {
+        break;
+      }
+      index += 1;
+      lastInRun = candidate;
+    }
+
     const next = rows[index + 1];
     const sameDeviceNextStart = next?.device_id === row.device_id
       ? new Date(next.started_at).getTime()
@@ -416,7 +439,8 @@ export function buildTimelineSegments(
       ? new Date(active.last_seen_at).getTime()
       : undefined;
     const startMs = new Date(row.started_at).getTime();
-    const endMs = getActiveEndTime(startMs, sameDeviceNextStart, currentEndMs);
+    const lastSampleMs = new Date(lastInRun.started_at).getTime();
+    const endMs = getRunEndTime(lastSampleMs, sameDeviceNextStart, currentEndMs);
     const minutes = computeDurationMinutes(startMs, endMs);
 
     segments.push({
@@ -456,6 +480,19 @@ export function buildMediaTimelineSegments(
       continue;
     }
 
+    let lastInRun = row;
+    while (index + 1 < rows.length) {
+      const candidate = rows[index + 1];
+      if (!candidate
+        || candidate.device_id !== row.device_id
+        || candidate.media_hash !== row.media_hash
+        || !isNearSample(lastInRun.started_at, candidate.started_at)) {
+        break;
+      }
+      index += 1;
+      lastInRun = candidate;
+    }
+
     const next = rows[index + 1];
     const sameDeviceNextStart = next?.device_id === row.device_id
       ? new Date(next.started_at).getTime()
@@ -468,7 +505,8 @@ export function buildMediaTimelineSegments(
       ? new Date(active.last_seen_at).getTime()
       : undefined;
     const startMs = new Date(row.started_at).getTime();
-    const endMs = getActiveEndTime(startMs, sameDeviceNextStart, currentEndMs);
+    const lastSampleMs = new Date(lastInRun.started_at).getTime();
+    const endMs = getRunEndTime(lastSampleMs, sameDeviceNextStart, currentEndMs);
     const minutes = computeDurationMinutes(startMs, endMs);
     const summaryLabel = row.media_artist ? `${row.media_artist} - ${row.media_title}` : row.media_title;
 

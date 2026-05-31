@@ -8,10 +8,18 @@ export const MusicPayloadSchema = z.object({
   app: z.string().trim().min(1).max(128).optional()
 });
 
+export const OpenAppPayloadSchema = z.object({
+  app_id: z.string().trim().min(1).max(128),
+  window_title: z.string().max(256).optional(),
+  app_name: z.string().trim().min(1).max(128).optional(),
+  display_title: z.string().trim().min(1).max(256).optional()
+});
+
 export const ExtraPayloadSchema = z.object({
   battery_percent: z.number().int().min(0).max(100).optional(),
   battery_charging: z.boolean().optional(),
-  music: MusicPayloadSchema.optional()
+  music: MusicPayloadSchema.optional(),
+  open_apps: z.array(OpenAppPayloadSchema).max(32).optional()
 });
 
 export const ReportRequestSchema = z.object({
@@ -30,7 +38,8 @@ export const PublicMusicStateSchema = z.object({
 export const PublicExtraStateSchema = z.object({
   battery_percent: z.number().int().min(0).max(100).optional(),
   battery_charging: z.boolean().optional(),
-  music: PublicMusicStateSchema.optional()
+  music: PublicMusicStateSchema.optional(),
+  open_apps: z.array(OpenAppPayloadSchema.omit({ window_title: true })).max(32).optional()
 });
 
 export const PublicDeviceStateSchema = z.object({
@@ -107,6 +116,7 @@ export const ErrorResponseSchema = z.object({
 
 export type DevicePlatform = z.infer<typeof DevicePlatformSchema>;
 export type MusicPayload = z.infer<typeof MusicPayloadSchema>;
+export type OpenAppPayload = z.infer<typeof OpenAppPayloadSchema>;
 export type ExtraPayload = z.infer<typeof ExtraPayloadSchema>;
 export type ReportRequest = z.infer<typeof ReportRequestSchema>;
 export type PublicDeviceState = z.infer<typeof PublicDeviceStateSchema>;
@@ -145,6 +155,27 @@ export function sanitizeExtraPayload(input: unknown): ExtraPayload | undefined {
       artist: music.artist,
       app: music.app
     };
+  }
+
+  if (parsed.data.open_apps?.length) {
+    const seen = new Set<string>();
+    const openApps = [];
+    for (const app of parsed.data.open_apps) {
+      const key = app.app_id.trim().toLowerCase();
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      openApps.push({
+        app_id: app.app_id,
+        window_title: app.window_title,
+        app_name: app.app_name,
+        display_title: app.display_title
+      });
+    }
+    if (openApps.length > 0) {
+      result.open_apps = openApps;
+    }
   }
 
   return Object.keys(result).length > 0 ? result : undefined;

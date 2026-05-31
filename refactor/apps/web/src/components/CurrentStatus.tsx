@@ -17,7 +17,7 @@ export default function CurrentStatus({ displayName, device, loading }: CurrentS
           <span />
           <span />
         </div>
-        <p className="text-xs text-[var(--color-text-muted)]">正在加载喵</p>
+        <p className="text-xs text-[var(--color-text-muted)]">正在加载</p>
       </div>
     );
   }
@@ -25,6 +25,7 @@ export default function CurrentStatus({ displayName, device, loading }: CurrentS
   const active = device?.is_online ? device : undefined;
   const description = active ? getAppDescription(active.app_name, active.display_title, active.extra?.music) : null;
   const musicText = formatMusicLine(active?.extra?.music);
+  const openApps = active?.extra?.open_apps ?? [];
 
   return (
     <div className="status-bubble mb-6">
@@ -57,12 +58,25 @@ export default function CurrentStatus({ displayName, device, loading }: CurrentS
                 </span>
               ) : null}
             </div>
+            {openApps.length > 0 ? (
+              <div className="open-apps-row" aria-label="当前打开的应用">
+                {openApps.slice(0, 12).map((app) => (
+                  <span
+                    key={app.app_id}
+                    className={`open-app-pill ${app.app_name === active.app_name ? "open-app-pill-active" : ""}`}
+                    title={app.display_title || app.app_name || app.app_id}
+                  >
+                    {app.app_name || app.app_id}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="py-1">
             <p className="text-xl mb-1">(-.-)zzZ</p>
             <p className="text-sm text-[var(--color-text-muted)]">
-              {displayName} 现在不在电脑前~
+              {displayName} 现在不在电脑前
             </p>
           </div>
         )}

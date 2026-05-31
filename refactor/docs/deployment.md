@@ -96,6 +96,7 @@ Server 会自动读取当前 release 目录下的 `.env`。
 ```env
 HASH_SECRET=replace-me-with-a-long-random-string
 DEVICE_TOKEN_1=desk-token:my-desktop:My Desktop:windows
+OFFLINE_AFTER_SECONDS=15
 ```
 
 说明：

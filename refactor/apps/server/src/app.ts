@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { buildMediaTimelineSegments, buildTimelineSegments, createDatabase, type Database } from "@watchme/db";
 import {
   CurrentResponseSchema,
+  type ExtraPayload,
   ReportRequestSchema,
   SiteConfigSchema,
   TimelineResponseSchema,
@@ -40,6 +41,30 @@ function badRequest(message: string) {
 
 function tooManyRequests() {
   return Response.json({ error: "Too many requests", code: "rate_limited" }, { status: 429 });
+}
+
+function processExtraPayload(extra: ExtraPayload | undefined, hashSecret: string): ExtraPayload | undefined {
+  if (!extra) {
+    return undefined;
+  }
+
+  const processed: ExtraPayload = { ...extra };
+  if (extra.open_apps?.length) {
+    processed.open_apps = extra.open_apps.map((app) => {
+      const sanitized = processDisplayTitle({
+        appId: app.app_id,
+        windowTitle: app.window_title ?? "",
+        hashSecret
+      });
+      return {
+        app_id: sanitized.appId,
+        app_name: sanitized.appName,
+        display_title: sanitized.displayTitle
+      };
+    });
+  }
+
+  return processed;
 }
 
 export function createApp(context?: Partial<AppContext>) {
@@ -131,7 +156,7 @@ export function createApp(context?: Partial<AppContext>) {
 
     const device = c.get("device");
     const reportedAt = clampReportTimestamp(parsed.data.timestamp);
-    const extra = sanitizeExtraPayload(parsed.data.extra);
+    const extra = processExtraPayload(sanitizeExtraPayload(parsed.data.extra), config.hashSecret);
     const processed = processDisplayTitle({
       appId: parsed.data.app_id,
       windowTitle: parsed.data.window_title,

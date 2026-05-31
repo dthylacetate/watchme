@@ -144,6 +144,7 @@ class AgentManagerApp:
 
         self._build_ui()
         self._refresh_server_hint()
+        self._poll_worker_status()
 
     def _build_ui(self) -> None:
         frame = ttk.Frame(self.root, padding=16)
@@ -276,6 +277,10 @@ class AgentManagerApp:
         stop_worker()
         self.running_var.set("Stopped")
         self.status_var.set("Agent worker stopped.")
+
+    def _poll_worker_status(self) -> None:
+        self.running_var.set("Running" if is_worker_running() else "Stopped")
+        self.root.after(2000, self._poll_worker_status)
 
     def enable_startup(self) -> None:
         try:

@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildDeviceTokenEntry,
-  parseEnvContent,
-  stringifyEnvWithUpdates,
-} from "./server-manager-lib.mjs";
+// @ts-expect-error JS helper is exercised by runtime tests in this file.
+import { buildDeviceTokenEntry, parseEnvContent, stringifyEnvWithUpdates } from "./server-manager-lib.mjs";
 
 describe("server manager env helpers", () => {
   it("parses env content", () => {

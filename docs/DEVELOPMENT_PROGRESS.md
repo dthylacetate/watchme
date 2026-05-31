@@ -56,6 +56,9 @@
 - 整理仓库根目录文档，把需求、架构、进度、路线图和分析附录统一迁移到 `docs/`。
 - 修复 Windows Agent 本地直连 server 时的健康检查兼容性：本地 URL 统一归一化并绕过系统代理，502 报错会带回响应内容。
 - 增加 `/api/device` 鉴权检查接口，并让 Windows Agent Manager 的 `Test Connection` 同时验证 URL 和 token。
+- 修复背景音乐时间膨胀和同播放器歌曲被合并的问题；前端背景音乐区改为只显示累计播放时长和当前播放内容。
+- Windows Agent 增加当前可见窗口应用列表上报，前端当前状态区会展示已打开应用；Foreground Summary 保持为今天前台使用过的应用和累计时长，并突出当前前台应用。
+- Agent Manager 增加后台 Worker 状态轮询；默认离线阈值从 90 秒调为 15 秒，让前端更快感知 Agent 关闭。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。

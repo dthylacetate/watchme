@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { MusicPayload } from "@watchme/shared";
 import CurrentStatus from "@watchme/web/components/CurrentStatus";
 import DatePicker from "@watchme/web/components/DatePicker";
 import DeviceCard from "@watchme/web/components/DeviceCard";
@@ -27,10 +28,23 @@ export default function HomePage() {
   }, [current?.devices]);
 
   const currentAppByDevice = useMemo(() => {
-    const map: Record<string, string> = {};
+    const map: Record<string, { appName: string; displayTitle?: string }> = {};
     for (const device of devices) {
       if (device.is_online) {
-        map[device.device_id] = device.app_name;
+        map[device.device_id] = {
+          appName: device.app_name,
+          displayTitle: device.display_title
+        };
+      }
+    }
+    return map;
+  }, [devices]);
+
+  const currentMusicByDevice = useMemo(() => {
+    const map: Record<string, MusicPayload | undefined> = {};
+    for (const device of devices) {
+      if (device.is_online) {
+        map[device.device_id] = device.extra?.music;
       }
     }
     return map;
@@ -129,7 +143,12 @@ export default function HomePage() {
             <div className="timeline-refresh-note">每 10 秒自动刷新</div>
           </div>
           <div className="separator-dashed mb-3" />
-          <Timeline timeline={filteredTimeline} loading={loading} currentAppByDevice={currentAppByDevice} />
+          <Timeline
+            timeline={filteredTimeline}
+            loading={loading}
+            currentAppByDevice={currentAppByDevice}
+            currentMusicByDevice={selectedDevice ? { [selectedDevice.device_id]: currentMusicByDevice[selectedDevice.device_id] } : currentMusicByDevice}
+          />
         </section>
       </section>
     </>

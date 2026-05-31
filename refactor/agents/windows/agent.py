@@ -32,6 +32,9 @@ LOG_DIR = BASE_DIR / "logs"
 LOG_PATH = LOG_DIR / "agent.log"
 SINGLE_INSTANCE_NAME = "Local\\WatchMeAgentSingleton"
 ERROR_ALREADY_EXISTS = 183
+PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+PROCESS_QUERY_INFORMATION = 0x0400
+PROCESS_VM_READ = 0x0010
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
@@ -155,31 +158,87 @@ def get_foreground_window() -> int | None:
     return int(hwnd) or None
 
 
+def get_window_title(hwnd: int) -> str:
+    length = user32.GetWindowTextLengthW(hwnd)
+    if length <= 0:
+        return ""
+    title_buffer = ctypes.create_unicode_buffer(length + 1)
+    user32.GetWindowTextW(hwnd, title_buffer, length + 1)
+    return title_buffer.value.strip()
+
+
+def get_process_id_for_window(hwnd: int) -> int:
+    process_id = ctypes.c_ulong()
+    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(process_id))
+    return int(process_id.value)
+
+
+def get_process_name(process_id: int) -> str | None:
+    handle = kernel32.OpenProcess(
+        PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+        False,
+        process_id,
+    )
+    if not handle:
+        return None
+
+    try:
+        full_path_buffer = ctypes.create_unicode_buffer(1024)
+        size = ctypes.c_ulong(len(full_path_buffer))
+        if kernel32.QueryFullProcessImageNameW(handle, 0, full_path_buffer, ctypes.byref(size)):
+            return Path(full_path_buffer.value).name or None
+
+        base_buffer = ctypes.create_unicode_buffer(260)
+        if psapi.GetModuleBaseNameW(handle, None, base_buffer, len(base_buffer)):
+            return base_buffer.value or None
+    finally:
+        kernel32.CloseHandle(handle)
+
+    return None
+
+
 def get_foreground_info() -> tuple[str, str] | None:
     hwnd = get_foreground_window()
     if not hwnd:
         return None
 
-    length = user32.GetWindowTextLengthW(hwnd)
-    title_buffer = ctypes.create_unicode_buffer(length + 1)
-    user32.GetWindowTextW(hwnd, title_buffer, length + 1)
-    title = title_buffer.value.strip()
-
-    process_id = ctypes.c_ulong()
-    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(process_id))
-
-    handle = kernel32.OpenProcess(0x1000 | 0x0400, False, process_id.value)
-    if not handle:
+    process_name = get_process_name(get_process_id_for_window(hwnd))
+    if not process_name:
         return None
 
-    try:
-        buffer_length = 260
-        buffer = ctypes.create_unicode_buffer(buffer_length)
-        psapi.GetModuleBaseNameW(handle, None, buffer, buffer_length)
-        process_name = buffer.value or "unknown.exe"
-        return process_name, title
-    finally:
-        kernel32.CloseHandle(handle)
+    return process_name, get_window_title(hwnd)
+
+
+def list_open_apps(limit: int = 32) -> list[dict[str, str]]:
+    items: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    def enum_window(hwnd: int, _lparam: int) -> bool:
+        if not user32.IsWindowVisible(hwnd):
+            return True
+
+        title = get_window_title(hwnd)
+        if not title:
+            return True
+
+        process_name = get_process_name(get_process_id_for_window(hwnd))
+        if not process_name:
+            return True
+
+        key = process_name.lower()
+        if key in seen:
+            return True
+
+        seen.add(key)
+        items.append({
+            "app_id": process_name,
+            "window_title": title[:256],
+        })
+        return len(items) < limit
+
+    user32.EnumWindows(enum_window, 0)
+    return items
 
 
 def get_battery_extra() -> dict[str, Any]:
@@ -540,6 +599,9 @@ class AgentRuntime:
 
             if focus_changed or idle_changed or music_changed or heartbeat_due:
                 extra = get_battery_extra()
+                open_apps = list_open_apps()
+                if open_apps:
+                    extra["open_apps"] = open_apps
                 if music:
                     extra["music"] = {key: value for key, value in music.items() if value}
 

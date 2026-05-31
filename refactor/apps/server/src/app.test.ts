@@ -86,7 +86,17 @@ describe("server API", () => {
               title: "Blue in Green",
               artist: "Miles Davis",
               app: "QQ Music"
-            }
+            },
+            open_apps: [
+              {
+                app_id: "Code.exe",
+                window_title: "README.md - watchme - Visual Studio Code"
+              },
+              {
+                app_id: "WeChat.exe",
+                window_title: "Chat with friend"
+              }
+            ]
           }
         })
       });
@@ -100,6 +110,18 @@ describe("server API", () => {
       expect(currentJson.devices[0]?.app_name).toBe("VS Code");
       expect(currentJson.devices[0]?.display_title).toBe("watchme");
       expect(currentJson.devices[0]?.extra?.music?.title).toBe("Blue in Green");
+      expect(currentJson.devices[0]?.extra?.open_apps).toEqual([
+        {
+          app_id: "code.exe",
+          app_name: "VS Code",
+          display_title: "watchme"
+        },
+        {
+          app_id: "wechat.exe",
+          app_name: "WeChat",
+          display_title: "WeChat"
+        }
+      ]);
     } finally {
       ctx.cleanup();
     }
@@ -108,7 +130,8 @@ describe("server API", () => {
   it("builds foreground and media timelines", async () => {
     const ctx = makeEnv();
     try {
-      const baseTime = new Date("2026-05-31T12:00:00.000Z").getTime();
+      const baseTime = Date.now() - 120_000;
+      const timelineDate = new Date(baseTime).toISOString().slice(0, 10);
 
       for (const [offset, title, song] of [
         [0, "QQ 主窗口", "Track A"],
@@ -136,7 +159,7 @@ describe("server API", () => {
         });
       }
 
-      const response = await ctx.app.request("/api/timeline?date=2026-05-31&tz=0");
+      const response = await ctx.app.request(`/api/timeline?date=${timelineDate}&tz=0`);
       const json = await response.json();
 
       expect(json.segments.length).toBeGreaterThan(0);
