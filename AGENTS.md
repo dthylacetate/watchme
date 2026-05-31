@@ -6,21 +6,21 @@
 
 WatchMe 是一个独立项目，不是对任何上游项目的直接改造。
 
-你要在 `refactor/` 中建设正式源码。仓库里只保留分析文档，不再保留 `references/` 研究快照目录；需要兼容旧实现时，请优先阅读根目录的分析文档，不要把历史实现当作新项目源码。
+你要在 `refactor/` 中建设正式源码。历史分析、需求、架构和进度文档已经整理到 `docs/` 目录；不要在 `references/` 里开发，也不要把历史实现当作新项目源码。
 
 ## 必读顺序
 
-1. [README.md](./README.md)：项目定位和目录说明。
-2. [PRODUCT_REQUIREMENTS.md](./PRODUCT_REQUIREMENTS.md)：产品需求和 MVP 范围。
-3. [PROJECT_ARCHITECTURE.md](./PROJECT_ARCHITECTURE.md)：目标架构、模块边界和数据流。
-4. [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)：当前进度、已完成事项和下一步。
-5. [IMPLEMENTATION_BACKLOG.md](./IMPLEMENTATION_BACKLOG.md)：可执行任务列表。
+1. [README.md](./README.md)：项目定位、目录说明和快速运行方式。
+2. [docs/PRODUCT_REQUIREMENTS.md](./docs/PRODUCT_REQUIREMENTS.md)：产品需求和 MVP 范围。
+3. [docs/PROJECT_ARCHITECTURE.md](./docs/PROJECT_ARCHITECTURE.md)：目标架构、模块边界和数据流。
+4. [docs/DEVELOPMENT_PROGRESS.md](./docs/DEVELOPMENT_PROGRESS.md)：当前进度、已完成事项和下一步。
+5. [docs/IMPLEMENTATION_BACKLOG.md](./docs/IMPLEMENTATION_BACKLOG.md)：可执行任务列表。
 
 需要兼容旧数据或旧 API 时再读：
 
-- [CURRENT_API_AND_DATA.md](./CURRENT_API_AND_DATA.md)
-- [PROJECT_ANALYSIS.md](./PROJECT_ANALYSIS.md)
-- [UPSTREAM_BRANCH_ANALYSIS.md](./UPSTREAM_BRANCH_ANALYSIS.md)
+- [docs/analysis/CURRENT_API_AND_DATA.md](./docs/analysis/CURRENT_API_AND_DATA.md)
+- [docs/analysis/PROJECT_ANALYSIS.md](./docs/analysis/PROJECT_ANALYSIS.md)
+- [docs/analysis/UPSTREAM_BRANCH_ANALYSIS.md](./docs/analysis/UPSTREAM_BRANCH_ANALYSIS.md)
 
 ## 当前开发原则
 
@@ -49,6 +49,6 @@ WatchMe 是一个独立项目，不是对任何上游项目的直接改造。
 
 每次完成开发任务后，应更新：
 
-- [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)
-- 如任务状态有变化，更新 [IMPLEMENTATION_BACKLOG.md](./IMPLEMENTATION_BACKLOG.md)
-- 如架构发生变化，更新 [PROJECT_ARCHITECTURE.md](./PROJECT_ARCHITECTURE.md)
+- [docs/DEVELOPMENT_PROGRESS.md](./docs/DEVELOPMENT_PROGRESS.md)
+- 如任务状态有变化，更新 [docs/IMPLEMENTATION_BACKLOG.md](./docs/IMPLEMENTATION_BACKLOG.md)
+- 如架构发生变化，更新 [docs/PROJECT_ARCHITECTURE.md](./docs/PROJECT_ARCHITECTURE.md)

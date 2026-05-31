@@ -1,91 +1,77 @@
 # WatchMe
 
-WatchMe 是一个隐私优先的个人状态仪表盘，用来在自己的网页上展示“我现在大概在做什么”。它由桌面端 Agent、轻量后端和网页仪表盘组成：Agent 采集当前活动，后端负责隐私处理和存储，前端用可读、好看的方式展示当前状态、设备在线情况和近期时间线。
+WatchMe 是一个隐私优先的个人状态仪表盘，用来在自己的网页上展示“我现在大概在做什么”。它由桌面 Agent、轻量后端和网页仪表盘组成：Agent 采集当前活动，后端负责隐私处理和存储，前端展示当前状态、设备在线情况和近期时间线。
 
-这个仓库是 WatchMe 的独立项目仓库。历史调研只保留为分析文档，不再把上游快照目录放进正式仓库。
-
-## 项目目标
-
-- **隐私优先**：默认不保存原始窗口标题；公开页面只展示经过策略处理后的安全描述。
-- **个人部署友好**：单机、单服务、SQLite，适合 VPS、家用服务器或局域网部署。
-- **多设备感知**：优先支持 Windows 和 macOS 桌面端，后续再考虑移动端。
-- **轻量实时体验**：展示当前状态、设备在线/离线、今日活动和基础统计。
-- **可持续开发**：共享 API 契约、可测试的隐私规则、清晰的前后端和 Agent 边界。
+这个仓库是 WatchMe 的正式项目仓库。顶层目录现在只保留入口文件、工程配置和源码目录；需求、架构、进度和历史分析都整理到了 [`docs/`](./docs/README.md)。
 
 ## 当前状态
 
-WatchMe 已经完成第一轮可运行 MVP 骨架。当前仓库里有真实代码，不再只是设计文档。已经落地：
+当前仓库已经不是空设计稿，而是一版可交付的 Windows + Server + Web 成品线：
 
-- `Node 22 + npm` workspace 骨架。
-- `packages/shared`：Zod schema、类型和日期工具。
-- `packages/privacy`：标题处理、HMAC、浏览器敏感词、测试。
-- `packages/db`：Node SQLite schema、迁移和时间线构建。
-- `apps/server`：`/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`。
-- `apps/web`：更接近参考前端风格的当前状态、设备列表、前台活动时间线、后台音乐时间线。
-- `agents/windows`：可打包 Agent 管理器 + 后台托盘 Worker，前台焦点和媒体变化分开上报。
-- `refactor/scripts/server/deploy-server.ps1` / `.sh`：一键生成 server release 目录。
-- `manage-server-ui.cmd` / `manage-server.mjs`：release 自带的 Windows 图形管理器和命令行交互管理器。
-- `refactor/scripts/README.md`：脚本目录分组说明，区分构建脚本和运维脚本。
-- 自动数据清理：默认可配置清理 30 天前的活动和后台音乐记录。
-- 数据备份脚本：可一键备份 SQLite 数据库到带时间戳的 `backups/` 目录。
-- release 重新打包时会保留已有 `.env`、`data/`、`logs/` 和 `backups/`。
-- 一键部署脚本在检测到有效 `.env` 后，会自动做一轮 release 健康检查。
+- `Node 22 + npm` workspace
+- `packages/shared`：共享 schema、类型和日期工具
+- `packages/privacy`：标题处理、HMAC、浏览器敏感词过滤和测试
+- `packages/db`：SQLite schema、查询封装和时间线聚合
+- `apps/server`：`/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`
+- `apps/web`：当前状态、设备列表、前台活动时间线、后台音乐时间线
+- `agents/windows`：可打包的 Agent 管理器和后台托盘 Worker
+- `refactor/scripts/server`：部署、检查、备份、管理和 soak 脚本
 
-关键改进点：参考实现里“后台听歌不计时、切歌不及时更新”的问题，这一版已经从设计上拆开处理。前台应用和后台音乐被视为两条并行状态流，后端会单独记录 `media_activities`，前端也会单独展示后台听歌时长。
+关键改进点是：前台活动和后台音乐已经拆成两条独立状态流，不会再出现“QQ 音乐在后台播放但时长不增长”的问题。
 
 正式源码位于 [refactor/](./refactor/README.md)。
 
 ## 快速运行
 
-1. 安装依赖：
+1. 安装依赖
 
 ```powershell
 npm install
 ```
 
-2. 复制环境变量：
+2. 复制环境变量模板
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-3. 启动开发环境：
+3. 启动开发环境
 
 ```powershell
 npm run dev
 ```
 
-4. 或直接构建：
+4. 构建项目
 
 ```powershell
 npm run build
 ```
 
-5. 生成可发布的 server release：
+5. 生成可发布的 server release
 
 ```powershell
 npm run package:server
 ```
 
-6. 一键部署 server release：
+6. 一键部署 server release
 
 ```powershell
 .\refactor\scripts\server\deploy-server.ps1
 ```
 
-7. 需要手动备份数据时：
+7. 手动备份数据
 
 ```powershell
 .\refactor\scripts\server\backup-data.ps1
 ```
 
-8. 需要做一轮连续试跑时：
+8. 连续试跑 server
 
 ```powershell
 npm run soak:server -- http://127.0.0.1:3212 dev-token 24 250
 ```
 
-9. 部署后想快速做健康检查时：
+9. 部署后快速健康检查
 
 ```powershell
 npm run check:release -- http://127.0.0.1:3212
@@ -99,89 +85,82 @@ npm run check:release -- http://127.0.0.1:3212
 - `npm run package:server`
 - `.\refactor\scripts\server\deploy-server.ps1`
 
-## 目录
+## 目录结构
 
 ```text
 watchme/
-  README.md                         # 项目入口和当前状态
-  AGENTS.md                         # Agent 开发入口
-  PRODUCT_REQUIREMENTS.md           # 产品需求文档
-  PROJECT_ARCHITECTURE.md           # 目标架构
-  DEVELOPMENT_PROGRESS.md           # 当前开发进度
-  IMPLEMENTATION_BACKLOG.md         # 可执行任务清单
-  REFACTORING_ROADMAP.md            # 开发路线图
-  BRANCH_STRATEGY.md                # 分支和协作策略
-  CURRENT_API_AND_DATA.md           # 兼容参考：旧 API 和数据模型
-  PROJECT_ANALYSIS.md               # 调研附录：旧实现分析
-  UPSTREAM_BRANCH_ANALYSIS.md       # 调研附录：上游分支取舍
-  .env.example                      # 本地运行示例环境变量
-  refactor/                         # WatchMe 新项目源码位置
+  README.md                # 项目入口和快速运行说明
+  AGENTS.md                # 后续 Agent 接手入口
+  docs/                    # 需求、架构、进度、路线图和分析附录
+  refactor/                # 正式源码
+  .env.example             # 本地环境变量模板
+  package.json             # workspace 脚本入口
+  tsconfig.json            # 根 TypeScript 配置
+  vitest.config.ts         # 根测试配置
 ```
 
-## 核心模块规划
+`docs/` 内的结构：
+
+```text
+docs/
+  README.md
+  PRODUCT_REQUIREMENTS.md
+  PROJECT_ARCHITECTURE.md
+  DEVELOPMENT_PROGRESS.md
+  IMPLEMENTATION_BACKLOG.md
+  REFACTORING_ROADMAP.md
+  BRANCH_STRATEGY.md
+  analysis/
+    CURRENT_API_AND_DATA.md
+    PROJECT_ANALYSIS.md
+    UPSTREAM_BRANCH_ANALYSIS.md
+```
+
+## 核心模块
 
 ```text
 refactor/
   apps/
-    server/          # API、数据库、静态文件托管
+    server/          # API、SQLite、静态文件托管
     web/             # 仪表盘前端
   agents/
-    windows/         # Windows 桌面 Agent
-    macos/           # macOS 桌面 Agent
+    windows/         # Windows Agent、管理器、打包脚本
+    macos/           # macOS 占位目录
   packages/
     shared/          # API schema、通用类型、日期工具
-    privacy/         # 标题处理、隐私分级、敏感内容过滤
-    app-catalog/     # 应用识别、展示名、分类
-    db/              # SQLite schema、迁移、查询封装
+    privacy/         # 标题处理和隐私规则
+    app-catalog/     # 应用识别、分类、展示名
+    db/              # SQLite schema、迁移、查询
+  scripts/
+    build/           # 构建和 release 打包脚本
+    server/          # 部署、检查、备份和管理脚本
 ```
 
-## MVP 范围
+## 文档入口
 
-第一版只做最核心的闭环：
-
-- Windows/macOS Agent 上报当前前台应用、窗口标题、电池、音乐状态和 AFK 状态。
-- 后端鉴权、隐私处理、SQLite 存储、当前状态 API、时间线 API。
-- 前端展示当前状态、设备列表、今日时间线、基础统计和离线状态。
-- 后台音乐单独计时，不依赖它是不是当前最上层窗口。
-- 直接部署运行：后端常驻服务、前端静态构建、SQLite 数据目录、反向代理。
-- 隐私策略和 API schema 有测试。
-- Windows Agent 有打包脚本，可生成常驻托盘的 `.exe`。
-- Server 有最小化 release 目录、一键部署脚本，并会自动读取 release 目录下的 `.env`。
-
-暂不做：
-
-- Android 客户端。
-- 多用户系统。
-- 复杂权限后台。
-- AI 总结默认启用。
-- 大规模数据分析。
-
-## 文档
-
-- [Agent 开发入口](./AGENTS.md)
-- [产品需求](./PRODUCT_REQUIREMENTS.md)
-- [项目架构](./PROJECT_ARCHITECTURE.md)
-- [开发进度](./DEVELOPMENT_PROGRESS.md)
-- [实施任务清单](./IMPLEMENTATION_BACKLOG.md)
+- [文档总览](./docs/README.md)
+- [产品需求](./docs/PRODUCT_REQUIREMENTS.md)
+- [项目架构](./docs/PROJECT_ARCHITECTURE.md)
+- [开发进度](./docs/DEVELOPMENT_PROGRESS.md)
+- [实施任务清单](./docs/IMPLEMENTATION_BACKLOG.md)
 - [部署文档](./refactor/docs/deployment.md)
-- [开发路线图](./REFACTORING_ROADMAP.md)
-- [分支策略](./BRANCH_STRATEGY.md)
-- [旧 API 兼容参考](./CURRENT_API_AND_DATA.md)
-- [旧实现分析](./PROJECT_ANALYSIS.md)
-- [上游分支调研](./UPSTREAM_BRANCH_ANALYSIS.md)
+- [开发路线图](./docs/REFACTORING_ROADMAP.md)
+- [分支策略](./docs/BRANCH_STRATEGY.md)
+- [旧 API 兼容参考](./docs/analysis/CURRENT_API_AND_DATA.md)
+- [旧实现分析](./docs/analysis/PROJECT_ANALYSIS.md)
+- [上游分支调研](./docs/analysis/UPSTREAM_BRANCH_ANALYSIS.md)
 
 ## 开发原则
 
 1. 新代码只在 `refactor/` 中开发。
 2. 历史实现只保留为分析文档，不作为源码目录参与开发。
-3. 默认保护隐私，展示更多信息必须显式允许。
-4. 先完成稳定核心，再做视觉实验。
-5. 每个公开字段都要能解释它的隐私含义。
-6. 开发期不以 Docker 作为主循环，优先使用本地或服务器直接运行和部署脚本。
+3. 默认保守处理隐私；展示更多信息必须显式允许。
+4. 先完成稳定核心，再做额外视觉实验。
+5. 开发期不以 Docker 作为主循环，优先使用直接运行和部署脚本。
 
-## 开发纪要
+## 进度追踪
 
-README 会持续反映当前成品状态。更细的任务和进度在：
+README 只保留高层入口。更细的任务状态和变更记录在：
 
-- [开发进度](./DEVELOPMENT_PROGRESS.md)
-- [实施任务清单](./IMPLEMENTATION_BACKLOG.md)
+- [开发进度](./docs/DEVELOPMENT_PROGRESS.md)
+- [实施任务清单](./docs/IMPLEMENTATION_BACKLOG.md)

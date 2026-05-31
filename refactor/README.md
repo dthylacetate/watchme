@@ -25,10 +25,10 @@ scripts/
 
 相关文档：
 
-- [产品需求](../PRODUCT_REQUIREMENTS.md)
-- [项目架构](../PROJECT_ARCHITECTURE.md)
-- [开发进度](../DEVELOPMENT_PROGRESS.md)
-- [实施任务清单](../IMPLEMENTATION_BACKLOG.md)
+- [产品需求](../docs/PRODUCT_REQUIREMENTS.md)
+- [项目架构](../docs/PROJECT_ARCHITECTURE.md)
+- [开发进度](../docs/DEVELOPMENT_PROGRESS.md)
+- [实施任务清单](../docs/IMPLEMENTATION_BACKLOG.md)
 
 当前已经可用的能力：
 
@@ -38,4 +38,4 @@ scripts/
 - Server release 打包、健康检查、备份和管理工具
 - Windows Agent 管理器、后台托盘 Worker 和打包脚本
 
-这个目录里不保留任何上游源码镜像；历史调研只保留在根目录分析文档里。
+这个目录里不保留任何上游源码镜像；历史调研只保留在根目录 `docs/analysis/` 文档里。

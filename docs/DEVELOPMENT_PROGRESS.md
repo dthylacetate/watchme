@@ -53,6 +53,7 @@
 - 增加 Windows Agent 图形管理器，集中处理 URL / token 配置、启动停止和开机自启。
 - 增加 Server Windows 图形管理器和命令行交互管理器，集中处理 `.env`、启动停止和健康检查。
 - 整理 `refactor/scripts/` 目录，拆分为 `build/` 和 `server/` 两组脚本。
+- 整理仓库根目录文档，把需求、架构、进度、路线图和分析附录统一迁移到 `docs/`。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。
@@ -62,12 +63,12 @@
 | 文档 | 状态 | 说明 |
 | --- | --- | --- |
 | `README.md` | 已更新 | 反映当前成品状态和运行方式。 |
-| `PRODUCT_REQUIREMENTS.md` | 已创建 | MVP 需求范围。 |
-| `PROJECT_ARCHITECTURE.md` | 已更新 | 增加后台音乐独立时间线。 |
-| `REFACTORING_ROADMAP.md` | 已更新 | 独立项目路线图。 |
-| `BRANCH_STRATEGY.md` | 已更新 | 单主线开发策略。 |
+| `docs/PRODUCT_REQUIREMENTS.md` | 已创建 | MVP 需求范围。 |
+| `docs/PROJECT_ARCHITECTURE.md` | 已更新 | 增加后台音乐独立时间线。 |
+| `docs/REFACTORING_ROADMAP.md` | 已更新 | 独立项目路线图。 |
+| `docs/BRANCH_STRATEGY.md` | 已更新 | 单主线开发策略。 |
 | `AGENTS.md` | 已创建 | 后续 Agent 接手入口。 |
-| `IMPLEMENTATION_BACKLOG.md` | 已更新 | 反映当前完成状态。 |
+| `docs/IMPLEMENTATION_BACKLOG.md` | 已更新 | 反映当前完成状态。 |
 | `refactor/README.md` | 已更新 | 反映真实源码结构。 |
 | `refactor/docs/deployment.md` | 已创建 | 可执行文件与一键部署说明。 |
 
@@ -164,8 +165,8 @@
 
 读取顺序：
 
-1. `AGENTS.md`
-2. `README.md`
+1. `../AGENTS.md`
+2. `../README.md`
 3. `PROJECT_ARCHITECTURE.md`
 4. `IMPLEMENTATION_BACKLOG.md`
 
