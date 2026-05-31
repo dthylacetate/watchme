@@ -20,6 +20,12 @@ describe("app descriptions", () => {
     expect(getAppDescription("Tencent Meeting")).toBe("正在开会喵~");
   });
 
+  it("does not match short app names to longer music apps", () => {
+    expect(getAppDescription("QQ", "QQ")).toBe("正在QQ上水群喵~");
+    expect(getAppDescription("Weixin", "Weixin")).toBe("正在微信上聊天喵~");
+    expect(getAppDescription("File Explorer", "File Explorer")).toBe("正在翻文件夹找东西喵~");
+  });
+
   it("matches app names by useful aliases and substrings", () => {
     expect(getAppDescription("Adobe Photoshop 2026")).toBe("正在用Photoshop修图喵~");
     expect(getAppDescription("Clash Verge Rev")).toBe("正在调代理设置喵~");

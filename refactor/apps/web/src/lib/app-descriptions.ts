@@ -8,6 +8,7 @@ const descriptions: Record<string, string> = {
   TIM: "正在TIM上水群喵~",
   微信: "正在微信上聊天喵~",
   WeChat: "正在微信上聊天喵~",
+  Weixin: "正在微信上聊天喵~",
   Discord: "正在Discord灌水喵~",
   Line: "正在Line上聊天喵~",
   企业微信: "正在企业微信办公喵~",
@@ -464,13 +465,14 @@ function findMatchingEntry<T>(appName: string, entries: Array<readonly [string, 
   }
 
   return entries.find(([key]) =>
-    canFuzzyMatch(key) && (normalized.includes(key) || key.includes(normalized))
+    canFuzzyMatch(key) && normalized.includes(key)
   )?.[1];
 }
 
 export function getAppDescription(appName: string, displayTitle?: string, music?: MusicPayload): string {
   const normalized = normalizeAppName(appName);
   const isMusic = MUSIC_APPS.has(normalized);
+  const appSpecificDescription = findMatchingEntry(appName, normalizedDescriptions);
 
   if (displayTitle && !(music?.title && isMusic)) {
     const template = findMatchingEntry(appName, normalizedTitleTemplates);
@@ -478,10 +480,14 @@ export function getAppDescription(appName: string, displayTitle?: string, music?
       return template(displayTitle);
     }
 
+    if (appSpecificDescription) {
+      return appSpecificDescription;
+    }
+
     return `正在玩「${displayTitle}」喵~`;
   }
 
-  return findMatchingEntry(appName, normalizedDescriptions) || DEFAULT_DESCRIPTION;
+  return appSpecificDescription || DEFAULT_DESCRIPTION;
 }
 
 export function formatMusicLine(music?: MusicPayload): string | null {

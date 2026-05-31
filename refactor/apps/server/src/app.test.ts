@@ -123,8 +123,8 @@ describe("server API", () => {
         },
         {
           app_id: "wechat.exe",
-          app_name: "WeChat",
-          display_title: "WeChat"
+          app_name: "微信",
+          display_title: "微信"
         }
       ]);
     } finally {
