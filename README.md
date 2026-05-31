@@ -8,6 +8,7 @@
 - [重构路线图](./REFACTORING_ROADMAP.md)：建议的新项目边界、目标架构、目录设计和分阶段实施方案。
 - [当前 API 与数据模型](./CURRENT_API_AND_DATA.md)：旧系统端点、环境变量、表结构和公开数据契约。
 - [上游分支分析](./UPSTREAM_BRANCH_ANALYSIS.md)：已下载的上游分支、可复用内容和取舍建议。
+- [分支策略](./BRANCH_STRATEGY.md)：为什么当前阶段集中在一个 `main` 分支工作。
 - [references/upstream-branches/](./references/upstream-branches/)：原仓库有用分支的源码快照，不包含嵌套 `.git`。
 - [refactor/](./refactor/)：之后新重构项目建议放在这里。
 
