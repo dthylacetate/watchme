@@ -15,7 +15,7 @@ Windows/macOS Agent -> WatchMe Server -> SQLite -> WatchMe Web
 - 桌面 Agent 是数据入口。
 - 隐私策略是产品核心。
 - Web 仪表盘是公开展示面。
-- SQLite 和单容器部署是 MVP 的默认选择。
+- SQLite 和直接部署是 MVP 的默认选择。
 
 ## 2. 目标目录
 
@@ -100,13 +100,13 @@ Agent：
 - 建立 `apps/server`、`apps/web`、`packages/shared`。
 - 配置 `dev`、`build`、`test`、`typecheck`。
 - 添加基础 CI 脚本或本地验证脚本。
-- 建立 Dockerfile 雏形。
+- 建立直接运行脚本和部署脚本雏形。
 
 验收：
 
 - 一条命令启动 server 和 web。
 - 一条命令跑完 typecheck 和测试。
-- Docker 能构建最小镜像。
+- 一条命令能在目标机器上构建前端并启动后端。
 
 ### 阶段 2：共享契约
 
@@ -250,9 +250,10 @@ Agent：
 
 任务：
 
-- Docker 单容器。
-- docker-compose 示例。
-- Nginx 反代示例。
+- 直接部署脚本。
+- systemd service 示例。
+- Nginx/Caddy 反向代理示例。
+- 前端静态构建到 server public 目录。
 - 环境变量文档。
 - 数据库备份和迁移说明。
 - 从旧格式导入或兼容 `/api/report` 的说明。
@@ -261,7 +262,7 @@ Agent：
 
 - 新机器按文档可部署。
 - 旧 Agent 核心上报格式可兼容，或迁移步骤明确。
-- 数据卷重建容器不丢数据。
+- SQLite 数据目录、日志目录和备份方式明确。
 
 ## 5. 后续功能池
 
@@ -286,4 +287,3 @@ Agent：
 - 不直接把构建产物搬入新源码。
 
 正式实现以 `PRODUCT_REQUIREMENTS.md` 和本路线图为准。
-

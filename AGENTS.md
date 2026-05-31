@@ -31,6 +31,7 @@ WatchMe 是一个独立项目，不是对 `references/` 中任何项目的直接
 - 每个核心隐私规则都要有测试。
 - 不要把 Android 纳入 MVP。
 - 不要默认启用健康数据或 AI 总结。
+- 不要把 Docker 当作开发主路径；优先实现直接运行、部署脚本和 systemd/Nginx 文档。
 
 ## 第一阶段建议动作
 
@@ -51,4 +52,3 @@ WatchMe 是一个独立项目，不是对 `references/` 中任何项目的直接
 - [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)
 - 如任务状态有变化，更新 [IMPLEMENTATION_BACKLOG.md](./IMPLEMENTATION_BACKLOG.md)
 - 如架构发生变化，更新 [PROJECT_ARCHITECTURE.md](./PROJECT_ARCHITECTURE.md)
-
