@@ -1,39 +1,38 @@
-# 重构路线图
+# WatchMe 开发路线图
 
-这个文件描述下一版项目建议怎么放、怎么拆、怎么一步步替换旧实现。目标不是“全部重写得更复杂”，而是把当前项目已经好的部分保留下来，同时把不可持续的地方收束成清晰边界。
+这份路线图描述 WatchMe 作为独立项目的建设顺序。目标不是复刻任何现有实现，而是从需求出发，做一个边界清晰、隐私可靠、容易个人部署的状态仪表盘。
 
-## 1. 重构目标
+## 1. 总体目标
 
-新项目建议放在：
+WatchMe 第一阶段要完成一个稳定闭环：
 
 ```text
-watchme/refactor/
+Windows/macOS Agent -> WatchMe Server -> SQLite -> WatchMe Web
 ```
 
-目标：
+核心判断：
 
-- 保留个人部署友好：单容器、SQLite、低资源占用。
-- 保留隐私优先：原始窗口标题默认不入库。
-- 建立共享契约：前端、后端、Agent 共用 schema。
-- 建立可验证基础：每次改隐私规则、时间线和 API 都能跑测试。
-- 让未来 Agent 和移动端可以自然接入。
+- 桌面 Agent 是数据入口。
+- 隐私策略是产品核心。
+- Web 仪表盘是公开展示面。
+- SQLite 和单容器部署是 MVP 的默认选择。
 
-## 2. 推荐新目录
+## 2. 目标目录
 
 ```text
-watchme/refactor/
+refactor/
   apps/
-    server/              # API、静态托管、任务调度
-    web/                 # Next 或 Vite 前端
+    server/              # API、数据库、静态文件托管、后台任务
+    web/                 # 仪表盘前端
   agents/
-    windows/             # 从 upstream windows-source 重构迁入
-    macos/               # 从 upstream macos-source 重构迁入，需实机验证
+    windows/             # Windows 桌面 Agent
+    macos/               # macOS 桌面 Agent
   packages/
     shared/              # API schema、通用类型、日期工具
-    privacy/             # 隐私分级、标题处理、NSFW 策略
-    app-catalog/          # 应用映射和描述数据
-    db/                  # SQLite schema、迁移、查询
-    ui/                  # 可选，若保留 React 组件库
+    privacy/             # 隐私规则、标题处理、敏感内容过滤
+    app-catalog/          # 应用识别、展示名、描述模板
+    db/                  # SQLite schema、迁移、查询封装
+    ui/                  # 可选 UI 组件库
   docs/
     architecture.md
     api.md
@@ -45,254 +44,246 @@ watchme/refactor/
     migrate.ts
 ```
 
-如果希望更轻，也可以先只做：
+## 3. 技术方向
 
-```text
-watchme/refactor/
-  server/
-  web/
-  shared/
-  docs/
-```
+后端：
 
-## 3. 技术选型建议
+- Bun 或 Node 均可，优先选择项目启动和部署更顺手的方案。
+- API 层建议使用 Hono 或类似轻量框架。
+- Schema 使用 Zod、Valibot 或 TypeBox。
+- SQLite 作为默认存储。
+- 数据迁移必须有版本记录。
 
-### 后端
+前端：
 
-保守方案：继续使用 Bun 原生 HTTP + SQLite。
+- Vite + React 或 Next static export 都可。
+- 如果不需要 SSR，Vite 更轻。
+- UI 先做清晰可用，再做主题化和特殊视图。
 
-适合原因：
+Agent：
 
-- 当前代码已经能跑在 Bun。
-- 容器简单，体积小。
-- 个人项目不需要复杂服务框架。
+- Python 是 MVP 的现实选择，方便调用系统 API 和打包。
+- Windows/macOS 分别维护平台采集逻辑，不强行抽象。
+- 上报 payload 与后端共享 schema。
 
-建议增强：
+实时策略：
 
-- 加一个轻量路由层，例如 Hono，统一中间件、错误处理和类型推导。
-- 用 Zod、Valibot 或 TypeBox 管 API schema。
-- 用 Drizzle 或 Kysely 管迁移和 SQL 类型，或者至少自建 migrations 表。
+- MVP 使用 5-10 秒轮询。
+- 稳定后可升级 SSE。
 
-### 前端
+## 4. 阶段计划
 
-两条路线都可行：
+### 阶段 0：产品定稿
 
-- 继续 Next static export：保留现有部署模型。
-- 改 Vite + React：如果不需要 Next 的 App Router，构建和心智负担更轻。
+目标：明确 WatchMe 自己的产品边界。
 
-如果重点是个人仪表盘而不是 SEO，Vite 会更适合重构版。若想保留当前站点配置注入和未来页面扩展，Next 也可以继续。
+任务：
 
-### 数据推送
-
-短期保留 10 秒轮询，先完成结构重构。  
-中期改为 SSE：
-
-- 后端实现简单。
-- 浏览器原生支持。
-- 比 WebSocket 更适合单向状态更新。
-
-## 4. 分阶段计划
-
-### 阶段 0：冻结旧项目
-
-- 保持原项目只读。
-- 所有新文档和新项目都放进 `watchme/`。
-- 记录旧项目 API 和数据表，确认哪些行为必须兼容。
-- 下载并归档上游有用分支：`main`、`windows-source`、`macos-source`、两个前端 redesign 分支；跳过 Android。
-
-产物：
-
-- `watchme/PROJECT_ANALYSIS.md`
-- `watchme/REFACTORING_ROADMAP.md`
-- 旧 API 兼容清单
-- 上游分支取舍清单
-
-### 阶段 1：搭建新骨架
-
-- 在 `watchme/refactor/` 初始化 workspace。
-- 配置统一脚本：`dev`、`build`、`test`、`lint`、`typecheck`。
-- 建立 shared schema。
-- 建立 server health endpoint。
-- 建立 web 空仪表盘页面。
+- 完成 `PRODUCT_REQUIREMENTS.md`。
+- 确定 MVP 不包含 Android、多用户、AI 默认总结、健康数据默认展示。
+- 明确公开字段和隐私规则。
+- 确定单分支工作方式。
 
 验收：
 
-- 一条命令启动前后端。
-- 一条命令跑完 typecheck 和 test。
+- README 打开后呈现独立项目。
+- references 被标记为调研资料。
+- 所有新源码位置明确为 `refactor/`。
+
+### 阶段 1：项目骨架
+
+目标：建立可运行的空项目。
+
+任务：
+
+- 初始化 workspace。
+- 建立 `apps/server`、`apps/web`、`packages/shared`。
+- 配置 `dev`、`build`、`test`、`typecheck`。
+- 添加基础 CI 脚本或本地验证脚本。
+- 建立 Dockerfile 雏形。
+
+验收：
+
+- 一条命令启动 server 和 web。
+- 一条命令跑完 typecheck 和测试。
 - Docker 能构建最小镜像。
 
-### 阶段 2：迁移核心后端
+### 阶段 2：共享契约
 
-迁移顺序：
+目标：先定义数据边界，再写业务。
 
-1. 配置读取。
-2. token 鉴权。
-3. SQLite schema 和 migrations。
-4. `/api/report`。
-5. `/api/current`。
-6. `/api/timeline`。
-7. `/api/health-data`。
-8. 静态文件托管。
+任务：
 
-重构重点：
+- 定义 `DevicePlatform`。
+- 定义 `ReportRequest`。
+- 定义 `PublicDeviceState`。
+- 定义 `TimelineResponse`。
+- 定义 `ExtraPayload`。
+- 定义统一错误响应。
 
-- 请求体全部 schema 校验。
-- 错误响应统一。
-- title 处理和入库分开测试。
-- 时间线 duration 计算单独成纯函数。
-- 数据库查询避免在 indexed column 上直接套 `date()`。
+验收：
 
-### 阶段 3：迁移前端
+- 前端、后端、Agent 都引用同一份 schema 或生成物。
+- schema 测试覆盖合法和非法 payload。
 
-迁移顺序：
+### 阶段 3：隐私核心
 
-1. API client。
-2. dashboard state。
-3. 当前状态卡。
-4. 设备列表。
-5. 日期选择。
-6. 活动视图。
-7. 健康视图。
-8. 站点配置和 metadata。
+目标：把隐私逻辑作为独立模块完成。
 
-重构重点：
+任务：
 
-- 使用共享 API 类型。
-- 把文案和应用描述从组件中抽离。
-- 把全局 CSS 拆成 theme、layout、components、animations。
-- 统一中英文 UI 文案。
-- 增加空状态、错误状态和加载状态快照测试。
+- 建立应用分类规则。
+- 建立标题处理函数。
+- 建立浏览器标题敏感词规则。
+- 建立 HMAC 标题哈希工具。
+- 建立 NSFW 或敏感内容过滤。
+- 建立 allowlist 配置结构。
 
-可参考素材：
+默认策略：
 
-- `redesign/blossom-letter`：OKLCH 色彩、双栏信息架构、Top 应用统计、每日总结方向。
-- `redesign/pixel-room`：PixelRoom 可选视图、SVG 设备房间、day/night prop 边界。
+- 聊天、邮箱、金融、系统、文件：隐藏标题。
+- 浏览器：默认谨慎，敏感关键词隐藏。
+- IDE、视频、音乐、游戏：允许展示处理后的安全标题。
+- 未知应用：只展示应用名。
 
-### 阶段 4：隐私策略产品化
+验收：
 
-当前隐私策略是硬编码。建议重构为：
+- 隐私测试覆盖主要类别。
+- 原始窗口标题不会出现在公开 DTO 中。
 
-```text
-privacy/
-  rules.default.json
-  process-title.ts
-  nsfw.ts
-  tests/
-```
+### 阶段 4：后端 MVP
 
-建议策略：
+目标：完成可接收上报、可查询状态的后端。
 
-- 默认未知应用：`hide_title`。
-- 允许用户配置 allowlist：哪些应用可以展示标题。
-- 浏览器标题默认隐藏，只对视频/音乐等明确站点展示。
-- 健康数据默认可关闭公开查询。
-- 所有策略变更都有测试用例。
+任务：
 
-### 阶段 4.5：迁移桌面 Agent
+- 配置读取。
+- token 鉴权。
+- SQLite schema。
+- migrations 表。
+- `/api/report`。
+- `/api/current`。
+- `/api/timeline`。
+- `/api/config`。
+- `/api/health`。
+- 离线检测任务。
+- 数据清理任务。
 
-Windows：
+验收：
 
-- 迁入前台窗口检测、音频/全屏免 AFK、电池、音乐识别、托盘设置和 Reporter 退避。
-- 把 `agent.py` 拆为 `config`、`collector`、`reporter`、`tray`、`music`。
-- 给音乐标题解析和配置校验补单元测试。
+- 无 token 上报返回 401。
+- 合法上报写入设备状态和活动记录。
+- 原始标题不入库。
+- 时间线能按本地日期查询。
+- 当前状态 API 不包含敏感字段。
 
-macOS：
+### 阶段 5：Web MVP
 
-- 迁入 AppleScript 前台窗口、ioreg 空闲时间、pmset 音频判断、电池、音乐识别。
-- 修正 config 模板缺少 `idle_threshold_seconds` 的问题。
-- 标记为需要 macOS 实机验证；没有实机前不要承诺稳定发布。
+目标：完成第一版可用仪表盘。
 
-### 阶段 5：兼容迁移
+任务：
 
-旧数据库迁移到新数据库时要考虑：
+- API client。
+- 当前状态卡。
+- 设备列表。
+- 日期选择。
+- 今日活动视图。
+- 应用用量汇总。
+- 空状态、错误状态、加载状态。
+- 基础主题变量。
 
-- `activities` 保留历史。
-- `device_states` 可重新生成，但最好迁移最后状态。
-- `health_records` 保留。
-- `window_title` 旧列为空，不需要迁移敏感原文。
-- `title_hash` 依赖同一个 `HASH_SECRET`，如果换密钥，历史去重不可复用。
+验收：
 
-产物：
+- 无设备时页面可读。
+- 设备在线时能显示当前公开状态。
+- 设备离线时有清楚状态。
+- 移动端宽度不崩。
 
-- `scripts/migrate-old-db.ts`
-- 迁移前备份说明。
-- 迁移后校验命令。
+### 阶段 6：Windows Agent
 
-## 5. API 契约建议
+目标：完成 Windows 上报闭环。
 
-核心 schema：
+任务：
 
-```ts
-DevicePlatform = "windows" | "macos" | "android"
+- 配置读取和校验。
+- 前台窗口采集。
+- AFK 检测。
+- 音频/全屏免 AFK。
+- 电池信息。
+- 音乐信息。
+- Reporter 退避重试。
+- 托盘菜单。
+- 打包脚本。
 
-ReportRequest = {
-  app_id: string
-  window_title?: string
-  timestamp?: string
-  extra?: {
-    battery_percent?: number
-    battery_charging?: boolean
-    music?: {
-      title?: string
-      artist?: string
-      app?: string
-    }
-  }
-}
+验收：
 
-CurrentResponse = {
-  devices: PublicDeviceState[]
-  recent_activities: PublicActivity[]
-  server_time: string
-  viewer_count: number
-}
-```
+- 能向本地后端上报。
+- 断网后不会高频重试。
+- 音乐/全屏场景不误判 AFK。
+- 配置错误有明确提示。
 
-原则：
+### 阶段 7：macOS Agent
 
-- Agent 输入和公开输出分开定义。
-- 数据库 row 和 API DTO 分开定义。
-- 公开 DTO 不包含 `window_title` 字段，即使为空也不要出现。
-- 每个公开字段都说明隐私含义。
+目标：完成 macOS 上报闭环。
 
-## 6. 测试清单
+任务：
 
-最小测试集：
+- 配置读取和校验。
+- AppleScript 前台应用采集。
+- ioreg 空闲时间采集。
+- pmset 音频判断。
+- 全屏判断。
+- 电池信息。
+- 音乐信息。
+- 菜单栏状态。
+- launchd 文档。
 
-- `processDisplayTitle`：
-  - 聊天应用标题隐藏。
-  - 浏览器登录/支付/邮箱标题隐藏。
-  - 视频标题可展示。
-  - 未知应用按新策略隐藏或只显示应用名。
-- `isNSFW`：
-  - app id 命中。
-  - 域名命中。
-  - 子域名命中。
-  - 关键词命中。
-- `report`：
-  - 无 token 401。
-  - 无 app_id 400。
-  - title 截断。
-  - raw title 不入库。
-  - extra 白名单。
-- `timeline`：
-  - 同设备相邻活动计算 duration。
-  - 跨设备互不影响。
-  - 大间隔截断。
-  - 时区日期边界。
-- `health-data`：
-  - 批量插入上限。
-  - 重复记录不重复写入。
-  - 非法类型跳过。
+验收：
 
-## 7. 新项目验收标准
+- 至少一台 macOS 实机验证。
+- 权限缺失时给出明确提示。
+- 配置模板字段完整。
 
-第一版重构完成不需要比旧版功能更多，但必须满足：
+### 阶段 8：部署和迁移
 
-- 能用一个命令本地启动。
-- 能构建 Docker 镜像。
-- 能导入或复用旧数据库。
-- 旧 Agent 继续能调用 `/api/report`。
-- 公开页面能展示当前状态、设备、活动和健康数据。
-- 所有隐私处理逻辑有测试。
-- 文档说明哪些数据会公开、哪些不会公开。
+目标：让项目能被长期运行。
+
+任务：
+
+- Docker 单容器。
+- docker-compose 示例。
+- Nginx 反代示例。
+- 环境变量文档。
+- 数据库备份和迁移说明。
+- 从旧格式导入或兼容 `/api/report` 的说明。
+
+验收：
+
+- 新机器按文档可部署。
+- 旧 Agent 核心上报格式可兼容，或迁移步骤明确。
+- 数据卷重建容器不丢数据。
+
+## 5. 后续功能池
+
+稳定后再考虑：
+
+- SSE 实时更新。
+- Pixel Room 可选视图。
+- 每日总结。
+- 更丰富的统计页。
+- 数据导出。
+- 健康数据独立开关。
+- 多主题。
+
+## 6. 参考资料使用规则
+
+`references/` 中的内容只作为研究材料：
+
+- 可以阅读。
+- 可以摘取设计思路。
+- 可以对照 API 兼容。
+- 不直接在其中开发。
+- 不直接把构建产物搬入新源码。
+
+正式实现以 `PRODUCT_REQUIREMENTS.md` 和本路线图为准。
+

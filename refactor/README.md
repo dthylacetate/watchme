@@ -1,17 +1,28 @@
-# 重构项目占位
+# WatchMe 源码目录
 
-新的重构项目建议放在这个目录下。
+这里是 WatchMe 新项目的正式源码位置。
 
-当前目录暂时只作为占位，避免后续把重构代码直接混进旧项目根目录。正式开始时，可以在这里初始化新的 workspace，例如：
+当前目录尚未初始化应用代码。第一阶段会在这里建立：
 
 ```text
-watchme/refactor/
-  apps/server
-  apps/web
-  packages/shared
-  packages/privacy
-  packages/db
+apps/
+  server/
+  web/
+agents/
+  windows/
+  macos/
+packages/
+  shared/
+  privacy/
+  app-catalog/
+  db/
 ```
 
-具体方案见上一级的 [REFACTORING_ROADMAP.md](../REFACTORING_ROADMAP.md)。
+实现依据：
+
+- [产品需求](../PRODUCT_REQUIREMENTS.md)
+- [开发路线图](../REFACTORING_ROADMAP.md)
+- [分支策略](../BRANCH_STRATEGY.md)
+
+`../references/` 中的内容是调研资料，不是本目录的上游源码。
 
