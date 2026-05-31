@@ -25,7 +25,7 @@ function writeReleaseFiles(root, targetDir) {
     "# Example agent token mapping:",
     "# DEVICE_TOKEN_1=<agent-token>:<device-id>:<display-name>:windows",
     "# In the Windows Agent Manager, fill only <agent-token>.",
-    "OFFLINE_AFTER_SECONDS=15",
+    "OFFLINE_AFTER_SECONDS=120",
     "RETENTION_DAYS=30",
     "CLEANUP_INTERVAL_MINUTES=60",
     "DISPLAY_NAME=WatchMe",

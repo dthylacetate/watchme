@@ -77,7 +77,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     port: Number(env.PORT || 3000),
     dbPath,
     hashSecret,
-    offlineAfterSeconds: Number(env.OFFLINE_AFTER_SECONDS || 15),
+    offlineAfterSeconds: Number(env.OFFLINE_AFTER_SECONDS || 120),
     retentionDays: Number(env.RETENTION_DAYS || 30),
     cleanupIntervalMinutes: Number(env.CLEANUP_INTERVAL_MINUTES || 60),
     staticDir,

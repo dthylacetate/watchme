@@ -58,7 +58,7 @@
 - 增加 `/api/device` 鉴权检查接口，并让 Windows Agent Manager 的 `Test Connection` 同时验证 URL 和 token。
 - 修复背景音乐时间膨胀和同播放器歌曲被合并的问题；前端背景音乐区改为只显示累计播放时长和当前播放内容。
 - Windows Agent 增加当前可见窗口应用列表上报，前端当前状态区会展示已打开应用；Foreground Summary 保持为今天前台使用过的应用和累计时长，并突出当前前台应用。
-- Agent Manager 增加后台 Worker 状态轮询；默认离线阈值从 90 秒调为 15 秒，让前端更快感知 Agent 关闭。
+- Agent Manager 增加后台 Worker 状态轮询；默认离线阈值调整为 120 秒，避免心跳间隔内误判离线。
 - Foreground Summary 改为基于“今天运行过的可见应用”统计，后台仍打开的应用会继续累计；QQ 音乐等播放器只进入 Background Music，不再混入应用摘要。
 - 前端访客计数改为浏览器生成 viewer id 后上报，避免同一来源地址下永远只显示 1 人正在看。
 - 扩展应用状态文案，按聊天、浏览器、IDE、设计、视频、音乐、游戏、办公等类别生成更贴近参考稿的轻松描述。
