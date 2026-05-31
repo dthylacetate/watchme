@@ -54,6 +54,243 @@ Set-Location refactor\agents\windows
 
 ## Server 一键部署
 
+### Linux 端口访问完整部署
+
+这一节适合不绑定域名，直接用 `http://服务器公网IP:3000` 访问的部署方式。
+
+以下示例把项目放在 `/opt/watchme`，端口使用 `3000`。如果你的目录或端口不同，替换对应路径和端口即可。
+
+1. 安装基础工具和 Node 22
+
+```bash
+sudo apt update
+sudo apt install -y git curl
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 22
+nvm use 22
+node -v
+npm -v
+```
+
+后端使用 `node:sqlite`，所以需要 Node 22 或更新版本。
+
+2. 克隆仓库
+
+```bash
+cd /opt
+sudo git clone git@github.com:dthylacetate/watchme.git
+sudo chown -R "$USER":"$USER" /opt/watchme
+cd /opt/watchme
+```
+
+如果服务器没有配置 GitHub SSH key，也可以先用 HTTPS：
+
+```bash
+git clone https://github.com/dthylacetate/watchme.git
+```
+
+3. 生成 server release
+
+```bash
+cd /opt/watchme
+chmod +x refactor/scripts/server/deploy-server.sh
+./refactor/scripts/server/deploy-server.sh
+```
+
+release 目录会生成在：
+
+```text
+/opt/watchme/refactor/.release/server
+```
+
+4. 配置 `.env`
+
+```bash
+nano /opt/watchme/refactor/.release/server/.env
+```
+
+最少需要改成类似这样：
+
+```env
+PORT=3000
+DB_PATH=./data/watchme.db
+STATIC_DIR=./public
+HASH_SECRET=<用 openssl rand -hex 32 生成的随机字符串>
+OFFLINE_AFTER_SECONDS=120
+RETENTION_DAYS=30
+CLEANUP_INTERVAL_MINUTES=60
+DISPLAY_NAME=WatchMe
+SITE_TITLE=WatchMe Now
+SITE_DESC=What is WatchMe doing right now?
+SITE_FAVICON=/favicon.ico
+DEVICE_TOKEN_1=windows-token:my-windows:My Windows PC:windows
+DEVICE_TOKEN_2=mac-token:my-mac:My MacBook:macos
+```
+
+生成 `HASH_SECRET`：
+
+```bash
+openssl rand -hex 32
+```
+
+`DEVICE_TOKEN_N` 格式是：
+
+```text
+<agent-token>:<device-id>:<display-name>:<platform>
+```
+
+Windows Agent Manager 里只填最前面的 `<agent-token>`，例如上面的 `windows-token`。`platform` 目前支持 `windows` 和 `macos`。
+
+5. 手动启动做一次检查
+
+```bash
+npm --prefix /opt/watchme/refactor/.release/server run start
+```
+
+另开一个 SSH 窗口检查：
+
+```bash
+curl http://127.0.0.1:3000/api/health
+```
+
+如果返回 `status: ok`，按 `Ctrl+C` 停掉手动启动的 server，继续配置 systemd。
+
+6. 写入 systemd 服务
+
+先确认 npm 路径：
+
+```bash
+which npm
+```
+
+创建服务文件：
+
+```bash
+sudo nano /etc/systemd/system/watchme.service
+```
+
+写入下面内容。如果 `which npm` 输出不是 `/usr/bin/npm`，把 `ExecStart` 的路径改成你的实际 npm 路径。
+
+```ini
+[Unit]
+Description=WatchMe Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/watchme/refactor/.release/server
+EnvironmentFile=/opt/watchme/refactor/.release/server/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启动并设为开机自启：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable watchme
+sudo systemctl start watchme
+sudo systemctl status watchme
+```
+
+查看实时日志：
+
+```bash
+journalctl -u watchme -f
+```
+
+7. 放行端口
+
+如果服务器使用 `ufw`：
+
+```bash
+sudo ufw allow 3000/tcp
+sudo ufw status
+```
+
+如果是云服务器，还需要在云厂商安全组里放行：
+
+```text
+TCP 3000
+来源 0.0.0.0/0
+```
+
+8. 访问和 Agent 配置
+
+浏览器访问：
+
+```text
+http://服务器公网IP:3000
+```
+
+Windows Agent Manager 填：
+
+```text
+Server URL: http://服务器公网IP:3000
+Agent Token: windows-token
+```
+
+然后依次点击：
+
+```text
+Save Config
+Test Connection
+Start Agent
+```
+
+如果修改了 server `.env` 里的 `DEVICE_TOKEN_*`，需要重启 server 后 Agent 的 `Test Connection` 才会认到新 token：
+
+```bash
+sudo systemctl restart watchme
+```
+
+### Linux 服务器更新代码并重新部署
+
+后续项目有新提交后，在服务器上执行：
+
+```bash
+cd /opt/watchme
+git pull
+./refactor/scripts/server/deploy-server.sh
+sudo systemctl restart watchme
+sudo systemctl status watchme
+```
+
+部署脚本会保留 release 里的：
+
+```text
+.env
+data/
+logs/
+backups/
+```
+
+所以正常更新不会覆盖你的 token、数据库和日志。
+
+更新后可以检查：
+
+```bash
+curl http://127.0.0.1:3000/api/health
+curl "http://127.0.0.1:3000/api/current"
+```
+
+如果改过端口，把 `3000` 换成你的 `PORT`。
+
+常用维护命令：
+
+```bash
+sudo systemctl restart watchme
+sudo systemctl stop watchme
+sudo systemctl start watchme
+sudo systemctl status watchme
+journalctl -u watchme -f
+```
+
 ### Windows
 
 ```powershell
