@@ -3,6 +3,13 @@ import { dirname, resolve } from "node:path";
 
 const PRESERVED_ENTRIES = [".env", "data", "logs", "backups"];
 
+function copyIfExists(source, target) {
+  if (!existsSync(source)) {
+    return;
+  }
+  cpSync(source, target);
+}
+
 function writeReleaseFiles(root, targetDir) {
   mkdirSync(targetDir, { recursive: true });
   mkdirSync(resolve(targetDir, "dist"), { recursive: true });
@@ -15,6 +22,9 @@ function writeReleaseFiles(root, targetDir) {
     "DB_PATH=./data/watchme.db",
     "STATIC_DIR=./public",
     "HASH_SECRET=replace-me",
+    "# Example agent token mapping:",
+    "# DEVICE_TOKEN_1=<agent-token>:<device-id>:<display-name>:windows",
+    "# In the Windows Agent Manager, fill only <agent-token>.",
     "OFFLINE_AFTER_SECONDS=90",
     "RETENTION_DAYS=30",
     "CLEANUP_INTERVAL_MINUTES=60",
@@ -32,7 +42,8 @@ function writeReleaseFiles(root, targetDir) {
     private: true,
     type: "module",
     scripts: {
-      start: "node dist/index.js"
+      start: "node dist/index.js",
+      manage: "node manage-server.mjs"
     },
     dependencies: {
       "@hono/node-server": "^1.14.4",
@@ -59,6 +70,11 @@ npm install
 cp .env.example .env
 npm run start
 \`\`\`
+
+## Manage
+
+- Windows UI: \`manage-server-ui.cmd\`
+- CLI: \`node manage-server.mjs\`
 `.trimStart();
 
   writeFileSync(resolve(targetDir, "README.md"), readme, "utf8");
@@ -66,6 +82,11 @@ npm run start
   if (existsSync(resolve(root, "refactor/docs/deployment.md"))) {
     cpSync(resolve(root, "refactor/docs/deployment.md"), resolve(targetDir, "deployment.md"));
   }
+
+  copyIfExists(resolve(root, "refactor/scripts/manage-server.mjs"), resolve(targetDir, "manage-server.mjs"));
+  copyIfExists(resolve(root, "refactor/scripts/server-manager-lib.mjs"), resolve(targetDir, "server-manager-lib.mjs"));
+  copyIfExists(resolve(root, "refactor/scripts/manage-server-ui.ps1"), resolve(targetDir, "manage-server-ui.ps1"));
+  copyIfExists(resolve(root, "refactor/scripts/manage-server-ui.cmd"), resolve(targetDir, "manage-server-ui.cmd"));
 }
 
 function preserveExistingEntries(targetDir, preserveDir) {

@@ -95,3 +95,5 @@
 | P6-004 | done | 部署文档 | 新机器可按文档部署。 |
 | P6-005 | done | 数据备份说明 | SQLite 数据位置和备份方式明确。 |
 | P6-006 | done | release 健康检查脚本 | 启动后可一键检查 health/config/current/timeline。 |
+| P6-007 | done | Server Windows 图形管理器 | 可视化修改 `.env`、启动停止、健康检查和备份。 |
+| P6-008 | done | Server 命令行交互管理器 | Linux / 通用环境可通过纯命令行交互管理 release。 |

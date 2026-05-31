@@ -51,6 +51,7 @@
 - 增加 Windows Agent 启动阶段的配置和服务端连通性自检。
 - 增加 Windows Agent 一键安装脚本，并让启动失败通过桌面弹窗尽早暴露。
 - 增加 Windows Agent 图形管理器，集中处理 URL / token 配置、启动停止和开机自启。
+- 增加 Server Windows 图形管理器和命令行交互管理器，集中处理 `.env`、启动停止和健康检查。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。

@@ -102,6 +102,35 @@ DEVICE_TOKEN_1=desk-token:my-desktop:My Desktop:windows
 - `DEVICE_TOKEN_1`：给某个 Agent 用的设备令牌定义
 - Agent 管理器里填的 `Agent Token`，就是这里最前面的 `desk-token`
 
+### Windows 上怎么管理 Server
+
+release 目录里现在自带两个管理入口：
+
+- `manage-server-ui.cmd` / `manage-server-ui.ps1`：Windows 图形界面管理器
+- `manage-server.mjs`：纯命令行交互管理器
+
+Windows 推荐直接双击：
+
+```text
+manage-server-ui.cmd
+```
+
+它可以直接完成：
+
+- 修改 `PORT`
+- 修改 `HASH_SECRET`
+- 修改 `DEVICE_TOKEN_1` 对应的 Agent token / device id / device name
+- 启动 / 停止 Server
+- 健康检查
+- 打开日志目录
+- 备份数据库
+
+Linux 不提供 UI，直接使用：
+
+```bash
+node manage-server.mjs
+```
+
 ## systemd 示例
 
 ```ini
