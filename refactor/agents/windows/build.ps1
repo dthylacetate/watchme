@@ -6,9 +6,10 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $venv = Join-Path $root ".build-venv"
-$exeName = "WatchMeAgent"
+$managerExeName = "WatchMeAgent"
+$workerExeName = "WatchMeAgentWorker"
 $releaseDir = Join-Path $root $OutputDir
-$bundleDir = Join-Path $releaseDir $exeName
+$bundleDir = Join-Path $releaseDir $managerExeName
 
 if (Test-Path $venv) {
   Remove-Item -Recurse -Force $venv
@@ -25,7 +26,7 @@ try {
   if (Test-Path $releaseDir) { Remove-Item -Recurse -Force $releaseDir }
 
   & $venvPython -m PyInstaller `
-    --name $exeName `
+    --name $workerExeName `
     --onefile `
     --noconsole `
     --collect-all winsdk `
@@ -33,8 +34,18 @@ try {
     --collect-all PIL `
     agent.py | Out-Host
 
+  & $venvPython -m PyInstaller `
+    --name $managerExeName `
+    --onefile `
+    --noconsole `
+    --collect-all winsdk `
+    --collect-all pystray `
+    --collect-all PIL `
+    manager.py | Out-Host
+
   New-Item -ItemType Directory -Force $bundleDir | Out-Null
-  Copy-Item ".\dist\$exeName.exe" $bundleDir
+  Copy-Item ".\dist\$managerExeName.exe" $bundleDir
+  Copy-Item ".\dist\$workerExeName.exe" $bundleDir
   Copy-Item ".\config.example.json" (Join-Path $bundleDir "config.example.json")
   Copy-Item ".\install-agent.ps1" (Join-Path $bundleDir "install-agent.ps1")
   Copy-Item ".\install-startup.ps1" (Join-Path $bundleDir "install-startup.ps1")
@@ -45,18 +56,23 @@ try {
   $readme = @"
 WatchMe Agent release
 
-1. Run install-agent.ps1
-2. Fill in server_url and token if config.json still has placeholder values
-3. The agent will stay in the system tray
-4. install-startup.ps1 and uninstall-agent.ps1 are included
+1. Run WatchMeAgent.exe
+2. Fill in server_url and token in the manager window
+3. Use Start Agent to launch the tray worker
+4. Use Enable Startup if you want it to run at logon
 
 Logs are written to .\logs\agent.log
 "@
   Set-Content -Path (Join-Path $bundleDir "README.txt") -Value $readme -Encoding UTF8
-  Compress-Archive -Path (Join-Path $bundleDir "*") -DestinationPath (Join-Path $releaseDir "$exeName.zip") -Force
+  Compress-Archive -Path (Join-Path $bundleDir "*") -DestinationPath (Join-Path $releaseDir "$managerExeName.zip") -Force
+
+  $managerSpec = Join-Path $root "$managerExeName.spec"
+  $workerSpec = Join-Path $root "$workerExeName.spec"
+  if (Test-Path $managerSpec) { Remove-Item -LiteralPath $managerSpec -Force }
+  if (Test-Path $workerSpec) { Remove-Item -LiteralPath $workerSpec -Force }
 
   Write-Host "Built agent bundle at $bundleDir"
-  Write-Host "Zip package at $(Join-Path $releaseDir "$exeName.zip")"
+  Write-Host "Zip package at $(Join-Path $releaseDir "$managerExeName.zip")"
 }
 finally {
   Pop-Location

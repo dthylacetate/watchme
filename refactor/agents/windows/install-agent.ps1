@@ -1,7 +1,7 @@
 param(
   [string]$BundleDir = ".",
   [string]$ExecutableName = "WatchMeAgent.exe",
-  [switch]$SkipStartup,
+  [switch]$EnableStartup,
   [switch]$SkipLaunch
 )
 
@@ -10,6 +10,7 @@ $bundleRoot = if ($BundleDir -eq ".") { $PSScriptRoot } else { $BundleDir }
 $resolvedBundle = Resolve-Path $bundleRoot
 $baseDir = $resolvedBundle.Path
 $exePath = Join-Path $baseDir $ExecutableName
+$workerPath = Join-Path $baseDir "WatchMeAgentWorker.exe"
 $configExamplePath = Join-Path $baseDir "config.example.json"
 $configPath = Join-Path $baseDir "config.json"
 $startupScript = Join-Path $baseDir "install-startup.ps1"
@@ -18,8 +19,12 @@ if (-not (Test-Path $exePath)) {
   throw "Could not find $ExecutableName in $baseDir."
 }
 
-if ((-not $SkipStartup) -and (-not (Test-Path $startupScript))) {
+if ($EnableStartup -and (-not (Test-Path $startupScript))) {
   throw "Could not find install-startup.ps1 in $baseDir."
+}
+
+if ($EnableStartup -and (-not (Test-Path $workerPath))) {
+  throw "Could not find WatchMeAgentWorker.exe in $baseDir."
 }
 
 if (-not (Test-Path $configPath)) {
@@ -34,12 +39,12 @@ if (-not (Test-Path $configPath)) {
 $configContent = Get-Content -Raw -LiteralPath $configPath
 $needsConfigEdit = $configContent -match "replace-with-device-token"
 
-if (-not $SkipStartup) {
-  & $startupScript -ExecutablePath $exePath
+if ($EnableStartup) {
+  & $startupScript -ExecutablePath $workerPath
 }
 
 if (-not $SkipLaunch) {
-  Start-Process -FilePath $exePath -WorkingDirectory $baseDir -WindowStyle Hidden
+  Start-Process -FilePath $exePath -WorkingDirectory $baseDir
   Write-Host "Started $ExecutableName."
 }
 
@@ -51,4 +56,4 @@ else {
   Write-Host "config.json already looks customized."
 }
 
-Write-Host "Agent install completed."
+Write-Host "Agent manager is ready."

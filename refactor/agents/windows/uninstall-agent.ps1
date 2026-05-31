@@ -1,6 +1,5 @@
 param(
   [string]$TaskName = "WatchMeAgent",
-  [string]$ProcessName = "WatchMeAgent",
   [switch]$PurgeLogs,
   [switch]$PurgeConfig
 )
@@ -17,13 +16,19 @@ else {
   Write-Host "Scheduled task $TaskName was not found."
 }
 
-$processes = Get-Process -Name $ProcessName -ErrorAction SilentlyContinue
-if ($null -ne $processes) {
-  $processes | Stop-Process -Force
-  Write-Host "Stopped running $ProcessName process."
+$processNames = @("WatchMeAgentWorker", "WatchMeAgent")
+$stoppedAny = $false
+foreach ($name in $processNames) {
+  $processes = Get-Process -Name $name -ErrorAction SilentlyContinue
+  if ($null -ne $processes) {
+    $processes | Stop-Process -Force
+    Write-Host "Stopped running $name process."
+    $stoppedAny = $true
+  }
 }
-else {
-  Write-Host "No running $ProcessName process found."
+
+if (-not $stoppedAny) {
+  Write-Host "No running WatchMe agent processes found."
 }
 
 if ($PurgeLogs) {

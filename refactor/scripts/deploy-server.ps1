@@ -44,4 +44,6 @@ finally {
 Write-Host "WatchMe server release prepared at $resolvedTarget"
 Write-Host "Next steps:"
 Write-Host "  1. Edit $resolvedTarget\.env"
+Write-Host "     - Set HASH_SECRET to a long random string"
+Write-Host "     - Set DEVICE_TOKEN_1=your-agent-token:your-device-id:Your Device Name:windows"
 Write-Host "  2. Run: npm --prefix $resolvedTarget run start"

@@ -17,20 +17,20 @@ Set-Location refactor\agents\windows
 产物：
 
 - `dist\WatchMeAgent\WatchMeAgent.exe`
+- `dist\WatchMeAgent\WatchMeAgentWorker.exe`
 - `dist\WatchMeAgent.zip`
 
 目标机器上的最短路径：
 
 1. 解压 `WatchMeAgent.zip`
-2. 运行：
-
-```powershell
-.\install-agent.ps1
-```
-
-3. 如果脚本打开了 `config.json`，填好 `server_url` 和 `token`
-4. 确认托盘中出现 WatchMe Agent
-5. Agent 带单实例保护，重复启动时会忽略后来的实例
+2. 直接运行 `WatchMeAgent.exe`
+3. 在管理器里填写：
+   - `Server URL`：例如 `http://127.0.0.1:3000` 或 `https://watchme.example.com`
+   - `Agent Token`：只填 token 前缀，例如 `desk-token`
+4. 点 `Save Config`
+5. 点 `Test Connection`
+6. 点 `Start Agent`
+7. 确认托盘中出现 WatchMe Agent Worker
 
 需要单独注册开机自启：
 
@@ -88,6 +88,19 @@ npm --prefix refactor/.release/server run start
 ```
 
 Server 会自动读取当前 release 目录下的 `.env`。
+
+第一次部署至少要改这两项：
+
+```env
+HASH_SECRET=replace-me-with-a-long-random-string
+DEVICE_TOKEN_1=desk-token:my-desktop:My Desktop:windows
+```
+
+说明：
+
+- `HASH_SECRET`：随便生成一条足够长的随机字符串
+- `DEVICE_TOKEN_1`：给某个 Agent 用的设备令牌定义
+- Agent 管理器里填的 `Agent Token`，就是这里最前面的 `desk-token`
 
 ## systemd 示例
 

@@ -22,7 +22,7 @@ WatchMe 已经完成第一轮可运行 MVP 骨架。当前仓库里有真实代�
 - `packages/db`：Node SQLite schema、迁移和时间线构建。
 - `apps/server`：`/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`。
 - `apps/web`：更接近参考前端风格的当前状态、设备列表、前台活动时间线、后台音乐时间线。
-- `agents/windows`：可打包托盘 Agent，支持一键安装脚本，前台焦点和媒体变化分开上报。
+- `agents/windows`：可打包 Agent 管理器 + 后台托盘 Worker，前台焦点和媒体变化分开上报。
 - `refactor/scripts/deploy-server.ps1` / `.sh`：一键生成 server release 目录。
 - 自动数据清理：默认可配置清理 30 天前的活动和后台音乐记录。
 - 数据备份脚本：可一键备份 SQLite 数据库到带时间戳的 `backups/` 目录。
