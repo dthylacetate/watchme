@@ -1,0 +1,3 @@
+winsdk>=1.0.0b10
+pystray>=0.19.5
+Pillow>=10.4.0

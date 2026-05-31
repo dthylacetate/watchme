@@ -4,9 +4,12 @@
 
 ## 当前阶段
 
-阶段 0：产品定稿与开发准备。
+阶段 1.5：核心 MVP 已可运行，进入补强和部署阶段。
 
-当前还没有正式应用源码。下一步是在 `refactor/` 中初始化新项目骨架。
+当前按最新决定，macOS Agent 暂缓，先把 Windows / Server / Web 收尾打磨完。
+
+1. 做一轮连续试跑，确认托盘 Agent 和 release 部署稳定。
+2. 根据试跑结果继续补细节。
 
 ## 已完成
 
@@ -21,30 +24,55 @@
 - 下载并归档参考分支快照。
 - 分析 Windows/macOS Agent 参考实现。
 - 分析两个前端设计参考分支。
+- 初始化 `refactor/` workspace。
+- 选定 `Node 22 + npm + Next + Hono + node:sqlite` 技术栈。
+- 建立 `shared` / `privacy` / `db` / `app-catalog` 模块。
+- 建立并通过 schema / privacy / server 集成测试。
+- 实现后端 MVP 路由。
+- 实现更贴近参考样例风格的前端页面。
+- 实现静态导出前端页面。
+- 建立 Windows Agent 基础脚本和打包脚本。
+- 增加 Windows 开机自启安装脚本。
+- 增加 server release 生成脚本。
+- 增加 Windows / Linux 一键部署脚本。
+- 补 systemd 和 Nginx 部署文档。
+- 增加可配置的数据清理任务和保留策略，并补数据库测试。
+- 增加 Windows / Linux 数据备份脚本和备份说明。
+- 完成 Windows Agent 托盘 UI、配置入口和打包验证。
+- 完成前端桌面 / 移动端浏览器验收并修正响应式细节。
+- 修复 server release 启动时不会自动读取 `.env` 的问题，并补环境加载测试。
+- 增加 release 重建时保留 `.env`、`data/`、`logs/` 和 `backups/` 的机制，并补脚本测试。
+- 增加 Windows Agent 单实例保护，避免托盘版重复启动。
+- 增加可重复执行的 server soak 脚本，方便做连续试跑。
+- 将 Windows Agent 日志改为滚动日志，降低长时间运行时的日志膨胀风险。
+- 增加 Windows Agent 停用 / 卸载脚本。
+- 增加 release 启动后的健康检查脚本。
+- 让部署脚本在有效配置下自动执行一轮临时启动健康检查。
+- 增加 Windows Agent 启动阶段的配置和服务端连通性自检。
+- 完成 `npm run typecheck`、`npm run test`、`npm run build`。
+- 完成 `npm run package:server` 和 `deploy-server.ps1` 实跑验证。
+- 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。
 
 ## 当前文档状态
 
 | 文档 | 状态 | 说明 |
 | --- | --- | --- |
-| `README.md` | 已更新 | 独立项目入口。 |
+| `README.md` | 已更新 | 反映当前成品状态和运行方式。 |
 | `PRODUCT_REQUIREMENTS.md` | 已创建 | MVP 需求范围。 |
-| `PROJECT_ARCHITECTURE.md` | 已创建 | 目标架构和模块边界。 |
+| `PROJECT_ARCHITECTURE.md` | 已更新 | 增加后台音乐独立时间线。 |
 | `REFACTORING_ROADMAP.md` | 已更新 | 独立项目路线图。 |
 | `BRANCH_STRATEGY.md` | 已更新 | 单主线开发策略。 |
 | `AGENTS.md` | 已创建 | 后续 Agent 接手入口。 |
-| `IMPLEMENTATION_BACKLOG.md` | 已创建 | 下一步任务清单。 |
+| `IMPLEMENTATION_BACKLOG.md` | 已更新 | 反映当前完成状态。 |
+| `refactor/README.md` | 已更新 | 反映真实源码结构。 |
+| `refactor/docs/deployment.md` | 已创建 | 可执行文件与一键部署说明。 |
 
-## 待开始
+## 正在推进
 
-第一批开发任务：
+第二批开发任务：
 
-1. 初始化 `refactor/` workspace。
-2. 建立 `packages/shared`。
-3. 定义 API schema。
-4. 建立 `packages/privacy`。
-5. 为隐私规则写测试。
-6. 建立 `apps/server` 的 `/api/health`。
-7. 建立 `apps/web` 空状态页面。
+1. 连续运行稳定性试跑。
+2. 根据试跑结果继续打磨托盘、部署和 UI 细节。
 
 ## 暂不做
 
@@ -104,13 +132,37 @@
 - 直接部署更适合频繁迭代和快速调试。
 - 项目目标是个人服务，不需要一开始就把开发体验放进容器。
 
+### 2026-05-31：后台音乐独立成时间线
+
+决定：
+
+- 把前台焦点活动和后台音乐播放拆成两条状态流。
+- 后端新增 `media_activities` 持久化和 `media_summary` / `media_segments` 输出。
+
+理由：
+
+- 参考实现只用前台窗口心跳推断时长，导致挂着 QQ 音乐但焦点一直停在 QQ / 浏览器时，歌曲状态和听歌时长都不可靠。
+- “我在做什么”和“我在听什么”本来就是两个并行信号，分开建模更自然，也更利于后续做 richer UI。
+
+### 2026-05-31：交付形态改为 Agent 可执行文件 + Server 一键部署
+
+决定：
+
+- Windows Agent 默认走可执行文件交付。
+- Server 默认走 release 目录 + 一键脚本部署。
+
+理由：
+
+- 用户更需要可直接分发和启动的 Agent，而不是源码环境。
+- Server 侧更适合脚本化部署，避免每次部署都重新手工拼目录和依赖。
+
 ## 下一次 Agent 接手建议
 
 读取顺序：
 
 1. `AGENTS.md`
-2. `PRODUCT_REQUIREMENTS.md`
+2. `README.md`
 3. `PROJECT_ARCHITECTURE.md`
 4. `IMPLEMENTATION_BACKLOG.md`
 
-然后从 Backlog 的 P0-001 开始。
+然后从 Backlog 的 P5 和 P6 开始。

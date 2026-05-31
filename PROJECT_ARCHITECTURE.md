@@ -21,6 +21,7 @@ flowchart LR
 - Server：认证设备、处理隐私、存储数据、提供公开 API。
 - Web：展示公开数据，不接触原始窗口标题。
 - Shared：定义跨模块共享的数据契约。
+- 媒体状态：与前台焦点并行记录，避免“正在听什么”被焦点切换吞掉。
 
 ## 2. 目标目录
 
@@ -67,6 +68,7 @@ refactor/
 - 浏览器标题敏感词过滤。
 - HMAC 标题哈希。
 - 敏感/NSFW 过滤。
+- 不决定后台音乐是否单独计时；这由 server 的持久化策略控制。
 
 输入：
 
@@ -105,6 +107,8 @@ refactor/
 - migrations。
 - prepared queries。
 - 数据库 row 类型。
+- 前台活动和后台音乐活动的时间线构建。
+- 数据保留期清理。
 
 原则：
 
@@ -170,7 +174,8 @@ refactor/
 5. Server 解析 app name。
 6. Privacy Engine 生成 `display_title` 和 `title_hash`。
 7. Server 写入 `device_states` 和 `activities`。
-8. Server 返回 `{ ok: true }`。
+8. 如果存在 `extra.music`，Server 同步写入 `media_activities`。
+9. Server 返回 `{ ok: true }`。
 
 ### 展示流
 
@@ -178,7 +183,7 @@ refactor/
 2. Server 读取设备状态。
 3. Server 返回公开 DTO。
 4. Web 渲染当前状态和设备列表。
-5. Web 查询 `/api/timeline` 渲染当天活动。
+5. Web 查询 `/api/timeline` 渲染当天前台活动和后台音乐时间线。
 
 ## 5. 公开数据原则
 
@@ -217,6 +222,7 @@ POST /api/report
 devices
 device_states
 activities
+media_activities
 schema_migrations
 ```
 
@@ -234,5 +240,6 @@ viewer_sessions
 - Agent 平台 API 在不同系统版本不稳定。
 - 前后端类型漂移。
 - 时间线 duration 只是推断，不是真实精确使用时长。
+- 后台音乐来自媒体会话，某些播放器可能不暴露完整元数据。
 - references 中的旧实现包含构建产物和历史包袱，不能直接作为主源码。
 - 如果部署脚本和开发脚本边界不清，可能重新退化成难迭代的部署流程。

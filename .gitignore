@@ -9,6 +9,11 @@ build/
 out/
 .next/
 coverage/
+refactor/.release/
+refactor/agents/windows/dist/
+refactor/agents/windows/build/
+refactor/agents/windows/logs/
+refactor/agents/windows/.build-venv/
 
 # Local env
 .env
@@ -33,4 +38,3 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
-

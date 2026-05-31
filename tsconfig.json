@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@watchme/shared": ["refactor/packages/shared/src/index.ts"],
+      "@watchme/shared/*": ["refactor/packages/shared/src/*"],
+      "@watchme/privacy": ["refactor/packages/privacy/src/index.ts"],
+      "@watchme/privacy/*": ["refactor/packages/privacy/src/*"],
+      "@watchme/db": ["refactor/packages/db/src/index.ts"],
+      "@watchme/db/*": ["refactor/packages/db/src/*"],
+      "@watchme/app-catalog": ["refactor/packages/app-catalog/src/index.ts"],
+      "@watchme/app-catalog/*": ["refactor/packages/app-catalog/src/*"],
+      "@watchme/web/*": ["refactor/apps/web/src/*"]
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "refactor/**/*.ts",
+    "refactor/**/*.tsx",
+    "vitest.config.ts"
+  ]
+}

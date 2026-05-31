@@ -2,20 +2,22 @@
 
 这里是 WatchMe 新项目的正式源码位置。
 
-当前目录尚未初始化应用代码。第一阶段会在这里建立：
+当前目录已经完成第一轮 MVP 骨架：
 
 ```text
 apps/
-  server/
-  web/
+  server/            # Hono + Node SQLite API
+  web/               # Next.js 静态导出仪表盘
 agents/
-  windows/
-  macos/
+  windows/           # Windows 心跳 / 电池 / 媒体 Agent
+  macos/             # macOS 目录和实现说明
 packages/
-  shared/
-  privacy/
-  app-catalog/
-  db/
+  shared/            # Zod schema / 日期工具
+  privacy/           # 标题处理 / HMAC / 规则测试
+  app-catalog/       # 应用名称和分类映射
+  db/                # SQLite schema / 时间线构建
+docs/
+  ...                # 后续补充部署和架构文档
 ```
 
 实现依据：
@@ -26,3 +28,10 @@ packages/
 
 `../references/` 中的内容是调研资料，不是本目录的上游源码。
 
+当前已经可用的能力：
+
+- 共享 API schema、隐私规则和测试
+- `/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`
+- 前台活动时间线和后台音乐时间线
+- 静态导出前端构建
+- Windows Agent 基础上报脚本
