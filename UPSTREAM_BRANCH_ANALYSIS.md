@@ -2,7 +2,7 @@
 
 原仓库：[Monika-Dream/live-dashboard](https://github.com/Monika-Dream/live-dashboard/tree/main)  
 拉取时间：2026-05-31  
-下载位置：`watchme/references/upstream-branches/`
+说明：本文件保留上游分支研究结论；原始快照目录已从正式仓库移除，不再随 Git 分发。
 
 ## 1. 远端分支清单
 
@@ -21,17 +21,17 @@
 
 | 本地目录 | 文件数 | 内容 |
 | --- | ---: | --- |
-| `references/upstream-branches/main` | 52 | 当前 Dashboard 核心：后端、前端、Docker、Nginx、文档。 |
-| `references/upstream-branches/windows-source` | 8 | 独立 Windows Agent 源码。 |
-| `references/upstream-branches/macos-source` | 6 | 独立 macOS Agent 源码。 |
-| `references/upstream-branches/redesign__blossom-letter` | 54 | 前后端重设计分支，含 Windows/macOS Agent 副本。 |
-| `references/upstream-branches/redesign__pixel-room` | 70 | Pixel Room 分支，含设计计划、spec、Agent 副本和部分构建产物。 |
+| `main` 快照 | 52 | 当前 Dashboard 核心：后端、前端、Docker、Nginx、文档。 |
+| `windows-source` 快照 | 8 | 独立 Windows Agent 源码。 |
+| `macos-source` 快照 | 6 | 独立 macOS Agent 源码。 |
+| `redesign__blossom-letter` 快照 | 54 | 前后端重设计分支，含 Windows/macOS Agent 副本。 |
+| `redesign__pixel-room` 快照 | 70 | Pixel Room 分支，含设计计划、spec、Agent 副本和部分构建产物。 |
 
 注意：`redesign/pixel-room` 分支里包含 `packages/backend/public/` 静态构建产物；`redesign/blossom-letter` 分支里包含 `packages/frontend/tsconfig.tsbuildinfo`。这些不建议作为新项目源码直接继承，只作为上游快照保留。
 
 ## 3. Windows Agent 分析
 
-位置：`references/upstream-branches/windows-source/agents/windows/`
+历史快照位置：`windows-source/agents/windows/`
 
 核心能力：
 
@@ -74,7 +74,7 @@ pycaw>=20231023
 
 ## 4. macOS Agent 分析
 
-位置：`references/upstream-branches/macos-source/agents/macos/`
+历史快照位置：`macos-source/agents/macos/`
 
 核心能力：
 
@@ -177,4 +177,3 @@ Pillow>=10.0
 - 不要直接以任何 redesign 分支作为新项目基底。
 - 不要把 `packages/backend/public/` 或 `tsconfig.tsbuildinfo` 作为新项目源码继承。
 - 不要把 Android 源码纳入当前阶段。
-
