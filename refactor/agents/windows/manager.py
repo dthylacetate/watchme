@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tkinter as tk
+import ctypes
 from pathlib import Path
 from tkinter import messagebox, ttk
 
@@ -17,6 +18,7 @@ EXAMPLE_CONFIG_PATH = BASE_DIR / "config.example.json"
 WORKER_EXE_NAME = "WatchMeAgentWorker.exe"
 MANAGER_TITLE = "WatchMe Agent Manager"
 STARTUP_TASK_NAME = "WatchMeAgent"
+PROCESS_TERMINATE = 0x0001
 
 
 def ensure_config_file() -> None:
@@ -69,19 +71,41 @@ def build_server_env_hint(token: str, device_id: str = "my-desktop", display_nam
     return f"DEVICE_TOKEN_1={clean}:{device_id}:{display_name}:windows"
 
 
+def hidden_subprocess_kwargs() -> dict[str, object]:
+    kwargs: dict[str, object] = {
+        "creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    }
+    startupinfo_class = getattr(subprocess, "STARTUPINFO", None)
+    startf_use_show_window = getattr(subprocess, "STARTF_USESHOWWINDOW", 0)
+    sw_hide = 0
+    if startupinfo_class is not None:
+        startupinfo = startupinfo_class()
+        startupinfo.dwFlags |= startf_use_show_window
+        startupinfo.wShowWindow = sw_hide
+        kwargs["startupinfo"] = startupinfo
+    return kwargs
+
+
+def worker_process_ids() -> list[int]:
+    process_ids = (ctypes.c_ulong * 4096)()
+    bytes_returned = ctypes.c_ulong()
+    if not agent.psapi.EnumProcesses(ctypes.byref(process_ids), ctypes.sizeof(process_ids), ctypes.byref(bytes_returned)):
+        return []
+
+    count = bytes_returned.value // ctypes.sizeof(ctypes.c_ulong)
+    matches: list[int] = []
+    for raw_pid in process_ids[:count]:
+        pid = int(raw_pid)
+        if pid <= 0:
+            continue
+        process_name = agent.get_process_name(pid)
+        if process_name and process_name.lower() == WORKER_EXE_NAME.lower():
+            matches.append(pid)
+    return matches
+
+
 def is_worker_running() -> bool:
-    result = subprocess.run(
-        [
-            "powershell",
-            "-NoProfile",
-            "-Command",
-            "Get-Process -Name 'WatchMeAgentWorker' -ErrorAction SilentlyContinue | Select-Object -First 1",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.returncode == 0 and "WatchMeAgentWorker" in result.stdout
+    return len(worker_process_ids()) > 0
 
 
 def start_worker() -> None:
@@ -91,22 +115,23 @@ def start_worker() -> None:
     if is_worker_running():
         return
 
-    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     subprocess.Popen(
         [str(worker_path)],
         cwd=str(BASE_DIR),
-        creationflags=creationflags,
+        **hidden_subprocess_kwargs(),
         close_fds=False,
     )
 
 
 def stop_worker() -> None:
-    subprocess.run(
-        ["taskkill", "/IM", WORKER_EXE_NAME, "/F"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    for pid in worker_process_ids():
+        handle = agent.kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
+        if not handle:
+            continue
+        try:
+            agent.kernel32.TerminateProcess(handle, 0)
+        finally:
+            agent.kernel32.CloseHandle(handle)
 
 
 def run_script(script_name: str, *extra_args: str) -> subprocess.CompletedProcess[str]:
@@ -120,6 +145,7 @@ def run_script(script_name: str, *extra_args: str) -> subprocess.CompletedProces
         text=True,
         check=False,
         cwd=str(BASE_DIR),
+        **hidden_subprocess_kwargs(),
     )
 
 

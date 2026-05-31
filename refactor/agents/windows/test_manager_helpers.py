@@ -42,6 +42,14 @@ class ManagerHelperTests(unittest.TestCase):
 
         self.assertEqual(saved["server_url"], "http://127.0.0.1:3000")
 
+    def test_subprocesses_are_started_hidden(self) -> None:
+        kwargs = manager.hidden_subprocess_kwargs()
+
+        self.assertIn("creationflags", kwargs)
+        self.assertIsInstance(kwargs["creationflags"], int)
+        if "startupinfo" in kwargs:
+            self.assertEqual(getattr(kwargs["startupinfo"], "wShowWindow"), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

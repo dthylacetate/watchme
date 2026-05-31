@@ -11,6 +11,22 @@ $workerExeName = "WatchMeAgentWorker"
 $releaseDir = Join-Path $root $OutputDir
 $bundleDir = Join-Path $releaseDir $managerExeName
 
+function Stop-AgentBuildProcesses {
+  foreach ($name in @($managerExeName, $workerExeName)) {
+    $processes = Get-Process -Name $name -ErrorAction SilentlyContinue
+    foreach ($process in $processes) {
+      try {
+        if ($process.Path -and $process.Path.StartsWith($bundleDir, [System.StringComparison]::OrdinalIgnoreCase)) {
+          Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+        }
+      }
+      catch {
+        # Ignore processes whose executable path cannot be queried by this shell.
+      }
+    }
+  }
+}
+
 if (Test-Path $venv) {
   Remove-Item -Recurse -Force $venv
 }
@@ -23,6 +39,7 @@ try {
   & $venvPython -m pip install -r requirements.txt pyinstaller | Out-Host
 
   if (Test-Path "build") { Remove-Item -Recurse -Force "build" }
+  Stop-AgentBuildProcesses
   if (Test-Path $releaseDir) { Remove-Item -Recurse -Force $releaseDir }
 
   & $venvPython -m PyInstaller `
