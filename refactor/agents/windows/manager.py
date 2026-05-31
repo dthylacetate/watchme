@@ -53,7 +53,7 @@ def load_config_for_ui() -> dict[str, object]:
 
 def save_config_from_values(values: dict[str, str]) -> dict[str, object]:
     data: dict[str, object] = {
-        "server_url": values["server_url"].strip(),
+        "server_url": agent.normalize_server_url(values["server_url"]),
         "token": values["token"].strip(),
         "interval_seconds": int(values["interval_seconds"]),
         "heartbeat_seconds": int(values["heartbeat_seconds"]),
@@ -234,11 +234,13 @@ class AgentManagerApp:
             self.status_var.set(f"Save failed: {exc}")
             return
 
+        self.fields["server_url"].set(str(load_config_for_ui()["server_url"]))
         self.status_var.set(f"Saved {CONFIG_PATH.name}")
 
     def test_connection(self) -> None:
         try:
             config = save_config_from_values(self._current_values())
+            self.fields["server_url"].set(str(config["server_url"]))
             reporter = agent.Reporter(str(config["server_url"]), str(config["token"]))
             reporter.check_server_health()
         except Exception as exc:
@@ -251,7 +253,8 @@ class AgentManagerApp:
 
     def start_agent(self) -> None:
         try:
-            save_config_from_values(self._current_values())
+            config = save_config_from_values(self._current_values())
+            self.fields["server_url"].set(str(config["server_url"]))
             start_worker()
         except Exception as exc:
             messagebox.showerror(MANAGER_TITLE, str(exc))

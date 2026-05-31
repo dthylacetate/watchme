@@ -42,6 +42,17 @@ class AgentConfigValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "valid http/https URL"):
             agent.validate_config(config)
 
+    def test_localhost_is_normalized_to_loopback_ip(self) -> None:
+        self.assertEqual(
+            agent.normalize_server_url("http://localhost:3000/"),
+            "http://127.0.0.1:3000",
+        )
+
+    def test_loopback_urls_are_detected(self) -> None:
+        self.assertTrue(agent.is_loopback_server_url("http://127.0.0.1:3000"))
+        self.assertTrue(agent.is_loopback_server_url("http://localhost:3000"))
+        self.assertFalse(agent.is_loopback_server_url("https://watchme.example.com"))
+
 
 if __name__ == "__main__":
     unittest.main()

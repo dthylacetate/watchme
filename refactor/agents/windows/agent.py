@@ -14,7 +14,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
 from urllib import error, request
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 try:
     import pystray
@@ -34,6 +34,7 @@ SINGLE_INSTANCE_NAME = "Local\\WatchMeAgentSingleton"
 ERROR_ALREADY_EXISTS = 183
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
 logging.basicConfig(
@@ -90,7 +91,7 @@ def load_config() -> dict[str, Any]:
 
 
 def validate_config(data: dict[str, Any]) -> None:
-    server_url = str(data.get("server_url", "")).strip()
+    server_url = normalize_server_url(str(data.get("server_url", "")))
     token = str(data.get("token", "")).strip()
     parsed = urlparse(server_url)
 
@@ -108,6 +109,33 @@ def validate_config(data: dict[str, Any]) -> None:
 
         if numeric <= 0:
             raise ValueError(f"{key} must be greater than 0")
+
+
+def normalize_server_url(server_url: str) -> str:
+    value = server_url.strip()
+    if not value:
+        return value
+
+    parsed = urlparse(value)
+    hostname = (parsed.hostname or "").lower()
+    if hostname != "localhost":
+        return value.rstrip("/")
+
+    auth = ""
+    if parsed.username:
+        auth = parsed.username
+        if parsed.password:
+            auth += f":{parsed.password}"
+        auth += "@"
+
+    port = f":{parsed.port}" if parsed.port else ""
+    normalized = parsed._replace(netloc=f"{auth}127.0.0.1{port}")
+    return urlunparse(normalized).rstrip("/")
+
+
+def is_loopback_server_url(server_url: str) -> bool:
+    hostname = (urlparse(normalize_server_url(server_url)).hostname or "").lower()
+    return hostname in LOOPBACK_HOSTS
 
 
 def utc_timestamp() -> str:
@@ -249,6 +277,28 @@ class Reporter:
     retry_delay_seconds: float = 0.0
     last_error: str | None = None
 
+    def __post_init__(self) -> None:
+        self.server_url = normalize_server_url(self.server_url)
+        self._opener = self._build_opener()
+
+    def _build_opener(self) -> Any:
+        # The agent should always talk directly to the WatchMe server.
+        # System HTTP proxies can turn local health checks into confusing 502s.
+        if is_loopback_server_url(self.server_url):
+            return request.build_opener(request.ProxyHandler({}))
+        return request.build_opener()
+
+    @staticmethod
+    def _format_http_error(prefix: str, exc: error.HTTPError) -> RuntimeError:
+        details = ""
+        try:
+            body = exc.read().decode("utf-8", errors="replace").strip()
+        except Exception:
+            body = ""
+        if body:
+            details = f": {body[:200]}"
+        return RuntimeError(f"{prefix} with HTTP {exc.code}{details}")
+
     def check_server_health(self) -> None:
         req = request.Request(
             f"{self.server_url.rstrip('/')}/api/health",
@@ -256,11 +306,11 @@ class Reporter:
             method="GET",
         )
         try:
-            with request.urlopen(req, timeout=5) as response:
+            with self._opener.open(req, timeout=5) as response:
                 if not 200 <= response.status < 300:
                     raise RuntimeError(f"health check failed with HTTP {response.status}")
         except error.HTTPError as exc:
-            raise RuntimeError(f"health check failed with HTTP {exc.code}") from exc
+            raise self._format_http_error("health check failed", exc) from exc
         except error.URLError as exc:
             reason = exc.reason if hasattr(exc, "reason") else exc
             raise RuntimeError(f"health check failed: {reason}") from exc
@@ -283,12 +333,12 @@ class Reporter:
             method="POST",
         )
         try:
-            with request.urlopen(req, timeout=10) as response:
+            with self._opener.open(req, timeout=10) as response:
                 self.retry_delay_seconds = 0.0
                 self.last_error = None
                 return 200 <= response.status < 300
         except error.HTTPError as exc:
-            self.last_error = f"HTTP {exc.code}"
+            self.last_error = str(self._format_http_error("report failed", exc))
         except error.URLError as exc:
             reason = exc.reason if hasattr(exc, "reason") else exc
             self.last_error = str(reason)
