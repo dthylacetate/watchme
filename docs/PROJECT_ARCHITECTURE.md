@@ -22,6 +22,7 @@ flowchart LR
 - Web：展示公开数据，不接触原始窗口标题。
 - Shared：定义跨模块共享的数据契约。
 - 媒体状态：与前台焦点并行记录，避免“正在听什么”被焦点切换吞掉。
+- 打开应用用量：由 Agent 上报当前可见应用列表，Server 独立持久化，用于展示今天运行过的应用累计时长；音乐播放器走媒体流，不混入应用用量摘要。
 
 ## 2. 目标目录
 
@@ -174,8 +175,9 @@ refactor/
 5. Server 解析 app name。
 6. Privacy Engine 生成 `display_title` 和 `title_hash`。
 7. Server 写入 `device_states` 和 `activities`。
-8. 如果存在 `extra.music`，Server 同步写入 `media_activities`。
-9. Server 返回 `{ ok: true }`。
+8. 如果存在 `extra.open_apps`，Server 同步写入 `open_app_activities`，并过滤音乐播放器。
+9. 如果存在 `extra.music`，Server 同步写入 `media_activities`。
+10. Server 返回 `{ ok: true }`。
 
 ### 展示流
 

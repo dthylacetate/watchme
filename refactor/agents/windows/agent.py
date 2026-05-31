@@ -291,6 +291,13 @@ def normalize_music_signature(music: dict[str, Any] | None) -> str:
     return f"{music.get('app', '')}|{music.get('artist', '')}|{music.get('title', '')}"
 
 
+def normalize_open_apps_signature(open_apps: list[dict[str, str]]) -> str:
+    return "|".join(
+        f"{item.get('app_id', '').lower()}:{item.get('window_title', '')}"
+        for item in open_apps
+    )
+
+
 def format_music_label(music: dict[str, Any] | None) -> str:
     if not music or not music.get("title"):
         return ""
@@ -531,6 +538,7 @@ class AgentRuntime:
         previous_app = ""
         previous_title = ""
         previous_music_signature = ""
+        previous_open_apps_signature = ""
         previous_idle = False
         last_report_time = 0.0
         interval = 5
@@ -551,6 +559,7 @@ class AgentRuntime:
                     previous_app = ""
                     previous_title = ""
                     previous_music_signature = ""
+                    previous_open_apps_signature = ""
                     previous_idle = False
                     last_report_time = 0.0
                     self._reload_event.clear()
@@ -580,7 +589,9 @@ class AgentRuntime:
 
             foreground = get_foreground_info()
             music = await get_music_info()
+            open_apps = list_open_apps()
             music_signature = normalize_music_signature(music)
+            open_apps_signature = normalize_open_apps_signature(open_apps)
             music_label = format_music_label(music)
 
             if is_idle:
@@ -596,10 +607,10 @@ class AgentRuntime:
             focus_changed = app_id != previous_app or title != previous_title
             idle_changed = is_idle != previous_idle
             music_changed = music_signature != previous_music_signature
+            open_apps_changed = open_apps_signature != previous_open_apps_signature
 
-            if focus_changed or idle_changed or music_changed or heartbeat_due:
+            if focus_changed or idle_changed or music_changed or open_apps_changed or heartbeat_due:
                 extra = get_battery_extra()
-                open_apps = list_open_apps()
                 if open_apps:
                     extra["open_apps"] = open_apps
                 if music:
@@ -614,6 +625,7 @@ class AgentRuntime:
                     previous_app = app_id
                     previous_title = title
                     previous_music_signature = music_signature
+                    previous_open_apps_signature = open_apps_signature
                     previous_idle = is_idle
                     last_report_time = now
                     self._set_snapshot(

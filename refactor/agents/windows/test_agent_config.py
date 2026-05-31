@@ -53,6 +53,21 @@ class AgentConfigValidationTests(unittest.TestCase):
         self.assertTrue(agent.is_loopback_server_url("http://localhost:3000"))
         self.assertFalse(agent.is_loopback_server_url("https://watchme.example.com"))
 
+    def test_open_apps_signature_changes_when_background_app_changes(self) -> None:
+        base = [
+            {"app_id": "Code.exe", "window_title": "README.md"},
+            {"app_id": "msedge.exe", "window_title": "Docs"},
+        ]
+        changed = [
+            {"app_id": "Code.exe", "window_title": "README.md"},
+            {"app_id": "qq.exe", "window_title": "QQ"},
+        ]
+
+        self.assertNotEqual(
+            agent.normalize_open_apps_signature(base),
+            agent.normalize_open_apps_signature(changed),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

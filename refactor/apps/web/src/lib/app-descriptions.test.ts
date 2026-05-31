@@ -3,11 +3,17 @@ import { formatMusicLine, getAppDescription } from "./app-descriptions";
 
 describe("app descriptions", () => {
   it("uses title-aware templates for known apps", () => {
-    expect(getAppDescription("VS Code", "watchme")).toBe("正在 VS Code 里处理《watchme》~");
+    expect(getAppDescription("VS Code", "watchme")).toBe("正在 VS Code 里改《watchme》~");
+    expect(getAppDescription("PowerPoint", "Roadmap")).toBe("正在做《Roadmap》这份 PPT~");
   });
 
   it("falls back to generic text for unknown apps", () => {
     expect(getAppDescription("Something Else")).toBe("正在忙别的事情~");
+  });
+
+  it("uses playful app-specific copy without titles", () => {
+    expect(getAppDescription("Postman")).toBe("正在 Postman 调接口~");
+    expect(getAppDescription("Bilibili")).toBe("正在 B 站划水~");
   });
 
   it("prefers music metadata for player apps", () => {

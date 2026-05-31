@@ -59,6 +59,9 @@
 - 修复背景音乐时间膨胀和同播放器歌曲被合并的问题；前端背景音乐区改为只显示累计播放时长和当前播放内容。
 - Windows Agent 增加当前可见窗口应用列表上报，前端当前状态区会展示已打开应用；Foreground Summary 保持为今天前台使用过的应用和累计时长，并突出当前前台应用。
 - Agent Manager 增加后台 Worker 状态轮询；默认离线阈值从 90 秒调为 15 秒，让前端更快感知 Agent 关闭。
+- Foreground Summary 改为基于“今天运行过的可见应用”统计，后台仍打开的应用会继续累计；QQ 音乐等播放器只进入 Background Music，不再混入应用摘要。
+- 前端访客计数改为浏览器生成 viewer id 后上报，避免同一来源地址下永远只显示 1 人正在看。
+- 扩展应用状态文案，按聊天、浏览器、IDE、设计、视频、音乐、游戏、办公等类别生成更贴近参考稿的轻松描述。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。

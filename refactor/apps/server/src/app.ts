@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
-import { buildMediaTimelineSegments, buildTimelineSegments, createDatabase, type Database } from "@watchme/db";
+import { buildMediaTimelineSegments, buildOpenAppTimelineSegments, createDatabase, type Database } from "@watchme/db";
 import {
   CurrentResponseSchema,
   type ExtraPayload,
@@ -15,6 +15,7 @@ import {
   sanitizeExtraPayload
 } from "@watchme/shared";
 import { processDisplayTitle } from "@watchme/privacy";
+import { resolveApp } from "@watchme/app-catalog";
 import { loadConfig, type DeviceToken, type ServerConfig } from "./config";
 import { startCleanupLoop } from "./cleanup";
 import { takeRateLimitToken } from "./rate-limit";
@@ -43,6 +44,23 @@ function tooManyRequests() {
   return Response.json({ error: "Too many requests", code: "rate_limited" }, { status: 429 });
 }
 
+function isUsageSummaryApp(appId: string, appName: string): boolean {
+  const category = resolveApp(appId).category;
+  if (category === "music") {
+    return false;
+  }
+
+  const normalizedName = appName.toLowerCase();
+  return ![
+    "qq music",
+    "spotify",
+    "netease cloud music",
+    "apple music",
+    "kugou",
+    "kuwo"
+  ].some((name) => normalizedName.includes(name));
+}
+
 function processExtraPayload(extra: ExtraPayload | undefined, hashSecret: string): ExtraPayload | undefined {
   if (!extra) {
     return undefined;
@@ -50,18 +68,20 @@ function processExtraPayload(extra: ExtraPayload | undefined, hashSecret: string
 
   const processed: ExtraPayload = { ...extra };
   if (extra.open_apps?.length) {
-    processed.open_apps = extra.open_apps.map((app) => {
-      const sanitized = processDisplayTitle({
-        appId: app.app_id,
-        windowTitle: app.window_title ?? "",
-        hashSecret
-      });
-      return {
-        app_id: sanitized.appId,
-        app_name: sanitized.appName,
-        display_title: sanitized.displayTitle
-      };
-    });
+    processed.open_apps = extra.open_apps
+      .map((app) => {
+        const sanitized = processDisplayTitle({
+          appId: app.app_id,
+          windowTitle: app.window_title ?? "",
+          hashSecret
+        });
+        return {
+          app_id: sanitized.appId,
+          app_name: sanitized.appName,
+          display_title: sanitized.displayTitle
+        };
+      })
+      .filter((app) => isUsageSummaryApp(app.app_id, app.app_name));
   }
 
   return processed;
@@ -181,7 +201,10 @@ export function createApp(context?: Partial<AppContext>) {
   });
 
   app.get("/api/current", (c) => {
-    const viewerKey = `${c.req.header("x-forwarded-for") || "local"}|${c.req.header("user-agent") || "unknown"}`;
+    const viewerId = (c.req.query("viewer_id") || c.req.header("x-watchme-viewer-id"))?.trim();
+    const viewerKey = viewerId && viewerId.length <= 128
+      ? `viewer:${viewerId}`
+      : `${c.req.header("x-forwarded-for") || "local"}|${c.req.header("user-agent") || "unknown"}`;
     const viewerCount = touchViewer(viewerKey);
     const payload = CurrentResponseSchema.parse({
       devices: db.listCurrentDevices(config.offlineAfterSeconds),
@@ -208,9 +231,10 @@ export function createApp(context?: Partial<AppContext>) {
     const deviceId = c.req.query("device_id") || undefined;
     const range = getUtcRangeForLocalDate(date, timezoneOffset);
     const currentDevices = db.listCurrentDevices(config.offlineAfterSeconds);
-    const foregroundRows = db.listActivitiesInRange(range.startIso, range.endIso, deviceId);
+    const openAppRows = db.listOpenAppActivitiesInRange(range.startIso, range.endIso, deviceId);
     const mediaRows = db.listMediaActivitiesInRange(range.startIso, range.endIso, deviceId);
-    const foregroundTimeline = buildTimelineSegments(foregroundRows, currentDevices);
+    const serverTime = new Date().toISOString();
+    const foregroundTimeline = buildOpenAppTimelineSegments(openAppRows, currentDevices, serverTime);
     const mediaTimeline = buildMediaTimelineSegments(mediaRows, currentDevices);
 
     const payload = TimelineResponseSchema.parse({

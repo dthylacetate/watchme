@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "./app";
+import { resetViewersForTest } from "./viewers";
 
 function makeEnv() {
   const tempDir = mkdtempSync(join(tmpdir(), "watchme-server-"));
@@ -39,6 +40,10 @@ function makeEnv() {
 }
 
 describe("server API", () => {
+  beforeEach(() => {
+    resetViewersForTest();
+  });
+
   it("validates device bearer tokens", async () => {
     const ctx = makeEnv();
     try {
@@ -165,6 +170,75 @@ describe("server API", () => {
       expect(json.segments.length).toBeGreaterThan(0);
       expect(json.media_segments.length).toBeGreaterThan(0);
       expect(Object.keys(json.media_summary["desk-01"] || {})).toContain("Artist - Track B");
+    } finally {
+      ctx.cleanup();
+    }
+  });
+
+  it("counts open app usage independently from foreground focus and excludes music players", async () => {
+    const ctx = makeEnv();
+    try {
+      const baseTime = Date.now() - 120_000;
+      const timelineDate = new Date(baseTime).toISOString().slice(0, 10);
+
+      for (const offset of [0, 60_000] as const) {
+        await ctx.app.request("/api/report", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: "Bearer abc123"
+          },
+          body: JSON.stringify({
+            app_id: "Code.exe",
+            window_title: "README.md - watchme - Visual Studio Code",
+            timestamp: new Date(baseTime + offset).toISOString(),
+            extra: {
+              open_apps: [
+                {
+                  app_id: "Code.exe",
+                  window_title: "README.md - watchme - Visual Studio Code"
+                },
+                {
+                  app_id: "msedge.exe",
+                  window_title: "Docs - Microsoft Edge"
+                },
+                {
+                  app_id: "QQMusic.exe",
+                  window_title: "Track - QQ Music"
+                }
+              ],
+              music: {
+                title: "Track",
+                artist: "Artist",
+                app: "QQ Music"
+              }
+            }
+          })
+        });
+      }
+
+      const response = await ctx.app.request(`/api/timeline?date=${timelineDate}&tz=0`);
+      const json = await response.json();
+      const summary = json.summary["desk-01"] || {};
+
+      expect(summary["VS Code"]).toBeGreaterThanOrEqual(1);
+      expect(summary["Microsoft Edge"]).toBeGreaterThanOrEqual(1);
+      expect(summary["QQ Music"]).toBeUndefined();
+    } finally {
+      ctx.cleanup();
+    }
+  });
+
+  it("counts viewer ids instead of collapsing every browser behind one address", async () => {
+    const ctx = makeEnv();
+    try {
+      const first = await ctx.app.request("/api/current?viewer_id=viewer-a");
+      const second = await ctx.app.request("/api/current?viewer_id=viewer-b");
+      const repeat = await ctx.app.request("/api/current?viewer_id=viewer-a");
+
+      expect((await first.json()).viewer_count).toBe(1);
+      expect((await second.json()).viewer_count).toBe(2);
+      expect((await repeat.json()).viewer_count).toBe(2);
     } finally {
       ctx.cleanup();
     }

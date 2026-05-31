@@ -31,6 +31,8 @@ export interface MediaActivityRow {
   started_at: string;
 }
 
+export type OpenAppActivityRow = ForegroundActivityRow;
+
 export interface RecordReportInput {
   device: DeviceIdentity;
   reportedAt: string;
@@ -108,6 +110,31 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_media_started_at
         ON media_activities(started_at);
     `
+  },
+  {
+    version: "0002_open_app_activities",
+    sql: `
+      CREATE TABLE IF NOT EXISTS open_app_activities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id TEXT NOT NULL,
+        device_name TEXT NOT NULL,
+        platform TEXT NOT NULL,
+        app_id TEXT NOT NULL,
+        app_name TEXT NOT NULL,
+        display_title TEXT NOT NULL,
+        title_hash TEXT NOT NULL,
+        time_bucket INTEGER NOT NULL,
+        started_at TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_open_app_dedup
+        ON open_app_activities(device_id, app_id, title_hash, time_bucket);
+      CREATE INDEX IF NOT EXISTS idx_open_app_started_at
+        ON open_app_activities(started_at);
+      CREATE INDEX IF NOT EXISTS idx_open_app_device_app_started_at
+        ON open_app_activities(device_id, app_id, started_at);
+    `
   }
 ];
 
@@ -118,9 +145,11 @@ export interface Database {
   listCurrentDevices(offlineAfterSeconds: number, nowIso?: string): PublicDeviceState[];
   listRecentActivities(limit?: number): RecentActivity[];
   listActivitiesInRange(startIso: string, endIso: string, deviceId?: string): ForegroundActivityRow[];
+  listOpenAppActivitiesInRange(startIso: string, endIso: string, deviceId?: string): OpenAppActivityRow[];
   listMediaActivitiesInRange(startIso: string, endIso: string, deviceId?: string): MediaActivityRow[];
   cleanupOldData(retentionDays: number, nowIso?: string): {
     deletedActivities: number;
+    deletedOpenAppActivities: number;
     deletedMediaActivities: number;
   };
   close(): void;
@@ -254,6 +283,49 @@ export function createDatabase(path: string): Database {
           createdAt
         );
       }
+
+      const openApps = input.extra?.open_apps?.length
+        ? input.extra.open_apps.map((app) => ({
+            appId: app.app_id,
+            appName: app.app_name || app.app_id,
+            displayTitle: app.display_title || app.app_name || app.app_id
+          }))
+        : [{
+            appId: input.appId,
+            appName: input.appName,
+            displayTitle: input.displayTitle
+          }];
+
+      for (const app of openApps) {
+        if (isMusicAppForUsage(app.appId, app.appName)) {
+          continue;
+        }
+
+        const openAppHash = JSON.stringify([
+          app.appId,
+          app.displayTitle
+        ]);
+        sqlite.prepare(
+          `
+            INSERT OR IGNORE INTO open_app_activities(
+              device_id, device_name, platform, app_id, app_name, display_title,
+              title_hash, time_bucket, started_at, created_at
+            )
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `
+        ).run(
+          input.device.deviceId,
+          input.device.deviceName,
+          input.device.platform,
+          app.appId,
+          app.appName,
+          app.displayTitle,
+          openAppHash,
+          timeBucket,
+          input.reportedAt,
+          createdAt
+        );
+      }
     },
 
     listCurrentDevices(offlineAfterSeconds, nowIso = new Date().toISOString()) {
@@ -326,6 +398,28 @@ export function createDatabase(path: string): Database {
       ).all(startIso, endIso) as unknown as ForegroundActivityRow[];
     },
 
+    listOpenAppActivitiesInRange(startIso, endIso, deviceId) {
+      if (deviceId) {
+        return sqlite.prepare(
+          `
+            SELECT id, device_id, device_name, platform, app_id, app_name, display_title, title_hash, started_at
+            FROM open_app_activities
+            WHERE started_at >= ? AND started_at < ? AND device_id = ?
+            ORDER BY device_id ASC, app_id ASC, started_at ASC
+          `
+        ).all(startIso, endIso, deviceId) as unknown as OpenAppActivityRow[];
+      }
+
+      return sqlite.prepare(
+        `
+          SELECT id, device_id, device_name, platform, app_id, app_name, display_title, title_hash, started_at
+          FROM open_app_activities
+          WHERE started_at >= ? AND started_at < ?
+          ORDER BY device_id ASC, app_id ASC, started_at ASC
+        `
+      ).all(startIso, endIso) as unknown as OpenAppActivityRow[];
+    },
+
     listMediaActivitiesInRange(startIso, endIso, deviceId) {
       if (deviceId) {
         return sqlite.prepare(
@@ -355,12 +449,16 @@ export function createDatabase(path: string): Database {
       const deleteActivitiesResult = sqlite.prepare(
         "DELETE FROM activities WHERE started_at < ?"
       ).run(cutoffIso);
+      const deleteOpenAppResult = sqlite.prepare(
+        "DELETE FROM open_app_activities WHERE started_at < ?"
+      ).run(cutoffIso);
       const deleteMediaResult = sqlite.prepare(
         "DELETE FROM media_activities WHERE started_at < ?"
       ).run(cutoffIso);
 
       return {
         deletedActivities: Number(deleteActivitiesResult.changes ?? 0),
+        deletedOpenAppActivities: Number(deleteOpenAppResult.changes ?? 0),
         deletedMediaActivities: Number(deleteMediaResult.changes ?? 0)
       };
     },
@@ -373,6 +471,23 @@ export function createDatabase(path: string): Database {
 
 function computeDurationMinutes(startMs: number, endMs: number): number {
   return Math.max(0, Math.floor((endMs - startMs) / 60_000));
+}
+
+function isMusicAppForUsage(appId: string, appName: string): boolean {
+  const normalizedId = appId.toLowerCase();
+  const normalizedName = appName.toLowerCase();
+  return [
+    "qqmusic",
+    "music.ui",
+    "spotify",
+    "cloudmusic",
+    "netease cloud music",
+    "apple music",
+    "foobar",
+    "aimp",
+    "kugou",
+    "kuwo"
+  ].some((marker) => normalizedId.includes(marker) || normalizedName.includes(marker));
 }
 
 function getRunEndTime(
@@ -399,7 +514,8 @@ function isNearSample(previousStartedAt: string, nextStartedAt: string): boolean
 
 export function buildTimelineSegments(
   rows: ForegroundActivityRow[],
-  activeDevices: PublicDeviceState[]
+  activeDevices: PublicDeviceState[],
+  nowIso = new Date().toISOString()
 ): {
   segments: TimelineSegment[];
   summary: Record<string, Record<string, number>>;
@@ -435,8 +551,11 @@ export function buildTimelineSegments(
       ? new Date(next.started_at).getTime()
       : undefined;
     const active = activeByDevice.get(row.device_id);
-    const currentEndMs = active?.is_online && active.app_id === row.app_id
-      ? new Date(active.last_seen_at).getTime()
+    const activeOpenApps = active?.extra?.open_apps ?? [];
+    const isCurrentApp = active?.app_id === row.app_id;
+    const isOpenApp = activeOpenApps.some((app) => app.app_id === row.app_id);
+    const currentEndMs = active?.is_online && (isCurrentApp || isOpenApp)
+      ? new Date(nowIso).getTime()
       : undefined;
     const startMs = new Date(row.started_at).getTime();
     const lastSampleMs = new Date(lastInRun.started_at).getTime();
@@ -457,6 +576,82 @@ export function buildTimelineSegments(
     summary[row.device_id] ??= {};
     summary[row.device_id]![row.app_name] = (summary[row.device_id]![row.app_name] ?? 0) + minutes;
   }
+
+  return { segments, summary };
+}
+
+export function buildOpenAppTimelineSegments(
+  rows: OpenAppActivityRow[],
+  activeDevices: PublicDeviceState[],
+  nowIso = new Date().toISOString()
+): {
+  segments: TimelineSegment[];
+  summary: Record<string, Record<string, number>>;
+} {
+  const activeByDevice = new Map(
+    activeDevices.map((device) => [device.device_id, device])
+  );
+  const rowsByApp = new Map<string, OpenAppActivityRow[]>();
+  for (const row of rows) {
+    const key = `${row.device_id}\u001f${row.app_id}`;
+    rowsByApp.set(key, [...(rowsByApp.get(key) ?? []), row]);
+  }
+
+  const segments: TimelineSegment[] = [];
+  const summary: Record<string, Record<string, number>> = {};
+  const nowMs = new Date(nowIso).getTime();
+
+  for (const appRows of rowsByApp.values()) {
+    appRows.sort((left, right) => new Date(left.started_at).getTime() - new Date(right.started_at).getTime());
+
+    for (let index = 0; index < appRows.length; index += 1) {
+      const row = appRows[index];
+      if (!row) {
+        continue;
+      }
+
+      let lastInRun = row;
+      while (index + 1 < appRows.length) {
+        const candidate = appRows[index + 1];
+        if (!candidate
+          || candidate.title_hash !== row.title_hash
+          || !isNearSample(lastInRun.started_at, candidate.started_at)) {
+          break;
+        }
+        index += 1;
+        lastInRun = candidate;
+      }
+
+      const nextSameApp = appRows[index + 1];
+      const nextSameAppStart = nextSameApp
+        ? new Date(nextSameApp.started_at).getTime()
+        : undefined;
+      const active = activeByDevice.get(row.device_id);
+      const isOpenApp = active?.extra?.open_apps?.some((app) => app.app_id === row.app_id)
+        || active?.app_id === row.app_id;
+      const currentEndMs = active?.is_online && isOpenApp ? nowMs : undefined;
+      const startMs = new Date(row.started_at).getTime();
+      const lastSampleMs = new Date(lastInRun.started_at).getTime();
+      const endMs = getRunEndTime(lastSampleMs, nextSameAppStart, currentEndMs);
+      const minutes = computeDurationMinutes(startMs, endMs);
+
+      segments.push({
+        app_id: row.app_id,
+        app_name: row.app_name,
+        display_title: row.display_title,
+        started_at: row.started_at,
+        ended_at: new Date(endMs).toISOString(),
+        duration_minutes: minutes,
+        device_id: row.device_id,
+        device_name: row.device_name
+      });
+
+      summary[row.device_id] ??= {};
+      summary[row.device_id]![row.app_name] = (summary[row.device_id]![row.app_name] ?? 0) + minutes;
+    }
+  }
+
+  segments.sort((left, right) => new Date(left.started_at).getTime() - new Date(right.started_at).getTime());
 
   return { segments, summary };
 }

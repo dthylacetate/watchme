@@ -13,9 +13,9 @@ export function startCleanupLoop(db: Database, config: ServerConfig) {
   const run = () => {
     try {
       const result = runCleanup(db, config);
-      if (result.deletedActivities > 0 || result.deletedMediaActivities > 0) {
+      if (result.deletedActivities > 0 || result.deletedOpenAppActivities > 0 || result.deletedMediaActivities > 0) {
         console.log(
-          `Cleanup removed ${result.deletedActivities} foreground rows and ${result.deletedMediaActivities} media rows`
+          `Cleanup removed ${result.deletedActivities} foreground rows, ${result.deletedOpenAppActivities} open app rows and ${result.deletedMediaActivities} media rows`
         );
       }
     } catch (error) {

@@ -14,3 +14,7 @@ export function touchViewer(key: string): number {
 
   return viewers.size;
 }
+
+export function resetViewersForTest(): void {
+  viewers.clear();
+}

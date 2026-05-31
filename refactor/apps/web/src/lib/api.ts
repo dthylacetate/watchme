@@ -9,6 +9,29 @@ const DEFAULT_CONFIG: SiteConfig = {
   siteFavicon: "/favicon.ico"
 };
 
+const VIEWER_ID_KEY = "watchme.viewer_id";
+
+function getViewerId(): string | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  try {
+    const existing = window.localStorage.getItem(VIEWER_ID_KEY);
+    if (existing) {
+      return existing;
+    }
+
+    const next = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(VIEWER_ID_KEY, next);
+    return next;
+  } catch {
+    return undefined;
+  }
+}
+
 async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, { signal });
   if (!response.ok) {
@@ -18,7 +41,9 @@ async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 export function fetchCurrent(signal?: AbortSignal) {
-  return fetchJson<CurrentResponse>("/api/current", signal);
+  const viewerId = getViewerId();
+  const query = viewerId ? `?viewer_id=${encodeURIComponent(viewerId)}` : "";
+  return fetchJson<CurrentResponse>(`/api/current${query}`, signal);
 }
 
 export function fetchTimeline(date: string, signal?: AbortSignal) {
