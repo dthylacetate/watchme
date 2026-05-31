@@ -1,37 +1,41 @@
-# WatchMe 源码目录
+# WatchMe Source Tree
 
-这里是 WatchMe 新项目的正式源码位置。
+这里是 WatchMe 的正式源码目录。
 
-当前目录已经完成第一轮 MVP 骨架：
+当前主要分成这些部分：
 
 ```text
 apps/
   server/            # Hono + Node SQLite API
-  web/               # Next.js 静态导出仪表盘
+  web/               # Next.js 仪表盘
 agents/
-  windows/           # Windows 心跳 / 电池 / 媒体 Agent
-  macos/             # macOS 目录和实现说明
+  windows/           # Windows Agent、管理器和打包脚本
+  macos/             # macOS 占位目录和说明
 packages/
-  shared/            # Zod schema / 日期工具
-  privacy/           # 标题处理 / HMAC / 规则测试
-  app-catalog/       # 应用名称和分类映射
-  db/                # SQLite schema / 时间线构建
+  shared/            # Zod schema、共享类型、日期工具
+  privacy/           # 标题处理、HMAC、隐私规则测试
+  app-catalog/       # 应用识别和分类
+  db/                # SQLite schema、迁移、查询封装
 docs/
-  ...                # 后续补充部署和架构文档
+  deployment.md      # 部署说明
+scripts/
+  build/             # 构建和 release 目录准备脚本
+  server/            # 服务端部署、检查、备份和管理脚本
 ```
 
-实现依据：
+相关文档：
 
 - [产品需求](../PRODUCT_REQUIREMENTS.md)
-- [开发路线图](../REFACTORING_ROADMAP.md)
-- [分支策略](../BRANCH_STRATEGY.md)
-
-根目录中的分析文档记录了历史调研结论，但本目录没有任何上游源码镜像。
+- [项目架构](../PROJECT_ARCHITECTURE.md)
+- [开发进度](../DEVELOPMENT_PROGRESS.md)
+- [实施任务清单](../IMPLEMENTATION_BACKLOG.md)
 
 当前已经可用的能力：
 
 - 共享 API schema、隐私规则和测试
 - `/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`
 - 前台活动时间线和后台音乐时间线
-- 静态导出前端构建
-- Windows Agent 基础上报脚本
+- Server release 打包、健康检查、备份和管理工具
+- Windows Agent 管理器、后台托盘 Worker 和打包脚本
+
+这个目录里不保留任何上游源码镜像；历史调研只保留在根目录分析文档里。

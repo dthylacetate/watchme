@@ -55,13 +55,13 @@ Set-Location refactor\agents\windows
 ### Windows
 
 ```powershell
-.\refactor\scripts\deploy-server.ps1
+.\refactor\scripts\server\deploy-server.ps1
 ```
 
 ### Linux
 
 ```bash
-./refactor/scripts/deploy-server.sh
+./refactor/scripts/server/deploy-server.sh
 ```
 
 脚本会完成：
@@ -177,13 +177,13 @@ server {
 ### Windows
 
 ```powershell
-.\refactor\scripts\backup-data.ps1
+.\refactor\scripts\server\backup-data.ps1
 ```
 
 ### Linux
 
 ```bash
-./refactor/scripts/backup-data.sh
+./refactor/scripts/server/backup-data.sh
 ```
 
 默认会把当前 SQLite 文件复制到 release 目录下的 `backups/`，文件名带时间戳。
@@ -201,7 +201,7 @@ npm run soak:server -- http://127.0.0.1:3999 dev-token 24 100
 部署后快速健康检查：
 
 ```powershell
-.\refactor\scripts\check-release-health.ps1 http://127.0.0.1:3999
+.\refactor\scripts\server\check-release-health.ps1 http://127.0.0.1:3999
 ```
 
 `deploy-server.ps1` / `deploy-server.sh` 在检测到 `.env` 已经脱离占位值后，也会自动跑一轮同类检查。

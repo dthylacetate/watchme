@@ -23,8 +23,9 @@ WatchMe 已经完成第一轮可运行 MVP 骨架。当前仓库里有真实代�
 - `apps/server`：`/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`。
 - `apps/web`：更接近参考前端风格的当前状态、设备列表、前台活动时间线、后台音乐时间线。
 - `agents/windows`：可打包 Agent 管理器 + 后台托盘 Worker，前台焦点和媒体变化分开上报。
-- `refactor/scripts/deploy-server.ps1` / `.sh`：一键生成 server release 目录。
+- `refactor/scripts/server/deploy-server.ps1` / `.sh`：一键生成 server release 目录。
 - `manage-server-ui.cmd` / `manage-server.mjs`：release 自带的 Windows 图形管理器和命令行交互管理器。
+- `refactor/scripts/README.md`：脚本目录分组说明，区分构建脚本和运维脚本。
 - 自动数据清理：默认可配置清理 30 天前的活动和后台音乐记录。
 - 数据备份脚本：可一键备份 SQLite 数据库到带时间戳的 `backups/` 目录。
 - release 重新打包时会保留已有 `.env`、`data/`、`logs/` 和 `backups/`。
@@ -69,13 +70,13 @@ npm run package:server
 6. 一键部署 server release：
 
 ```powershell
-.\refactor\scripts\deploy-server.ps1
+.\refactor\scripts\server\deploy-server.ps1
 ```
 
 7. 需要手动备份数据时：
 
 ```powershell
-.\refactor\scripts\backup-data.ps1
+.\refactor\scripts\server\backup-data.ps1
 ```
 
 8. 需要做一轮连续试跑时：
@@ -96,7 +97,7 @@ npm run check:release -- http://127.0.0.1:3212
 - `npm run test`
 - `npm run build`
 - `npm run package:server`
-- `.\refactor\scripts\deploy-server.ps1`
+- `.\refactor\scripts\server\deploy-server.ps1`
 
 ## 目录
 

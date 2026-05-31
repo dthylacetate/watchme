@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$root = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
 $resolvedTarget = Resolve-Path -Path $TargetDir -ErrorAction SilentlyContinue
 if (-not $resolvedTarget) {
   $resolvedTarget = [System.IO.Path]::GetFullPath((Join-Path $root $TargetDir))
@@ -35,7 +35,7 @@ finally {
 
 Push-Location $root
 try {
-  node .\refactor\scripts\run-release-healthcheck.mjs $resolvedTarget
+  node .\refactor\scripts\server\run-release-healthcheck.mjs $resolvedTarget
 }
 finally {
   Pop-Location

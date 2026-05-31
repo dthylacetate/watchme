@@ -5,11 +5,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$root = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
 
 Push-Location $root
 try {
-  node .\refactor\scripts\check-release-health.mjs $BaseUrl $Retries $DelayMs
+  node .\refactor\scripts\server\check-release-health.mjs $BaseUrl $Retries $DelayMs
 }
 finally {
   Pop-Location

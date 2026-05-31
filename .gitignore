@@ -9,12 +9,15 @@ build/
 out/
 .next/
 coverage/
+!refactor/scripts/build/
+!refactor/scripts/build/**
 refactor/.release/
 refactor/agents/windows/dist/
 refactor/agents/windows/build/
 refactor/agents/windows/logs/
 refactor/agents/windows/.build-venv/
 refactor/agents/windows/*.spec
+refactor/scripts/*.d.ts
 
 # Local env
 .env

@@ -113,7 +113,7 @@ export async function runReleaseHealthCheck(targetArg = "refactor/.release/serve
 
   const { child, baseUrl } = await startReleaseServer(targetDir);
   try {
-    const checkScript = resolve("refactor/scripts/check-release-health.mjs");
+    const checkScript = resolve("refactor/scripts/server/check-release-health.mjs");
     const result = await new Promise((resolveResult, reject) => {
       const checker = spawn(process.execPath, [checkScript, baseUrl, "10", "500"], {
         cwd: resolve("."),

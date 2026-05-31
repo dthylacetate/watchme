@@ -83,10 +83,10 @@ npm run start
     cpSync(resolve(root, "refactor/docs/deployment.md"), resolve(targetDir, "deployment.md"));
   }
 
-  copyIfExists(resolve(root, "refactor/scripts/manage-server.mjs"), resolve(targetDir, "manage-server.mjs"));
-  copyIfExists(resolve(root, "refactor/scripts/server-manager-lib.mjs"), resolve(targetDir, "server-manager-lib.mjs"));
-  copyIfExists(resolve(root, "refactor/scripts/manage-server-ui.ps1"), resolve(targetDir, "manage-server-ui.ps1"));
-  copyIfExists(resolve(root, "refactor/scripts/manage-server-ui.cmd"), resolve(targetDir, "manage-server-ui.cmd"));
+  copyIfExists(resolve(root, "refactor/scripts/server/manage-server.mjs"), resolve(targetDir, "manage-server.mjs"));
+  copyIfExists(resolve(root, "refactor/scripts/server/server-manager-lib.mjs"), resolve(targetDir, "server-manager-lib.mjs"));
+  copyIfExists(resolve(root, "refactor/scripts/server/manage-server-ui.ps1"), resolve(targetDir, "manage-server-ui.ps1"));
+  copyIfExists(resolve(root, "refactor/scripts/server/manage-server-ui.cmd"), resolve(targetDir, "manage-server-ui.cmd"));
 }
 
 function preserveExistingEntries(targetDir, preserveDir) {

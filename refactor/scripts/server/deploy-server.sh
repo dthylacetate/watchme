@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 TARGET_DIR="${1:-"$ROOT/refactor/.release/server"}"
 
 cd "$ROOT"
@@ -16,7 +16,7 @@ if [[ ! -f .env ]]; then
 fi
 
 cd "$ROOT"
-node ./refactor/scripts/run-release-healthcheck.mjs "$TARGET_DIR"
+node ./refactor/scripts/server/run-release-healthcheck.mjs "$TARGET_DIR"
 
 echo "WatchMe server release prepared at $TARGET_DIR"
 echo "Next steps:"
