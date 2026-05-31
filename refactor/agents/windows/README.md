@@ -10,7 +10,7 @@
 - 现在会常驻系统托盘，可暂停、重载配置、打开配置文件和日志目录。
 - 有单实例保护，重复双击或开机自启撞上手动运行时会忽略新实例。
 - 日志会自动滚动，默认保留当前日志和 5 个历史日志文件。
-- 启动时会先检查 `config.json` 和 `/api/health`，地址或 token 明显有问题时会尽早报错。
+- 启动时会先检查 `config.json` 和 `/api/health`，地址或 token 明显有问题时会尽早报错，并弹出桌面提示。
 
 ## 开发运行
 
@@ -23,7 +23,6 @@ pip install -r requirements.txt
 ```
 
 2. 把 `config.example.json` 复制成 `config.json`，填入后端地址和 token。
-
 3. 运行：
 
 ```powershell
@@ -49,14 +48,20 @@ python agent.py
 
 - `dist\WatchMeAgent\WatchMeAgent.exe`
 - `dist\WatchMeAgent\config.example.json`
+- `dist\WatchMeAgent\install-agent.ps1`
 - `dist\WatchMeAgent.zip`
 
 建议的交付方式：
 
 1. 把 `WatchMeAgent.zip` 发到目标机器。
-2. 解压后把 `config.example.json` 复制成 `config.json`。
-3. 双击运行一次，确认托盘出现并能正常上报。
-4. 需要开机自启时执行：
+2. 解压后直接执行：
+
+```powershell
+.\install-agent.ps1
+```
+
+3. 如果 `config.json` 里还是占位值，脚本会自动打开它；填好后确认托盘出现并能正常上报。
+4. 只想单独注册开机自启时执行：
 
 ```powershell
 .\install-startup.ps1
@@ -73,6 +78,13 @@ python agent.py
 ```powershell
 .\uninstall-startup.ps1
 ```
+
+`install-agent.ps1` 默认会：
+
+- 在缺少 `config.json` 时自动从 `config.example.json` 创建。
+- 注册开机自启任务。
+- 启动托盘 Agent。
+- 如果发现还是占位 token，会自动打开 `config.json` 方便修改。
 
 ## 已知限制
 

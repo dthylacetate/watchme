@@ -22,12 +22,17 @@ Set-Location refactor\agents\windows
 目标机器上的最短路径：
 
 1. 解压 `WatchMeAgent.zip`
-2. 把 `config.example.json` 复制成 `config.json`
-3. 填好 `server_url` 和 `token`
-4. 运行 `WatchMeAgent.exe`，程序会常驻系统托盘
+2. 运行：
+
+```powershell
+.\install-agent.ps1
+```
+
+3. 如果脚本打开了 `config.json`，填好 `server_url` 和 `token`
+4. 确认托盘中出现 WatchMe Agent
 5. Agent 带单实例保护，重复启动时会忽略后来的实例
 
-需要开机自启：
+需要单独注册开机自启：
 
 ```powershell
 .\install-startup.ps1
@@ -149,7 +154,7 @@ server {
 npm run soak:server -- http://127.0.0.1:3999 dev-token 24 100
 ```
 
-这会连续发送一组模拟前台活动和后台音乐上报，并反复检查 `/api/current` 与 `/api/timeline` 是否正常返回。
+这会连续发送一组模拟前台活动和后台音乐上报，并反复检查 `/api/current` 和 `/api/timeline` 是否正常返回。
 
 部署后快速健康检查：
 

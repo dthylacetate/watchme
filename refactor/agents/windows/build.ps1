@@ -36,6 +36,7 @@ try {
   New-Item -ItemType Directory -Force $bundleDir | Out-Null
   Copy-Item ".\dist\$exeName.exe" $bundleDir
   Copy-Item ".\config.example.json" (Join-Path $bundleDir "config.example.json")
+  Copy-Item ".\install-agent.ps1" (Join-Path $bundleDir "install-agent.ps1")
   Copy-Item ".\install-startup.ps1" (Join-Path $bundleDir "install-startup.ps1")
   Copy-Item ".\uninstall-startup.ps1" (Join-Path $bundleDir "uninstall-startup.ps1")
   Copy-Item ".\uninstall-agent.ps1" (Join-Path $bundleDir "uninstall-agent.ps1")
@@ -44,11 +45,10 @@ try {
   $readme = @"
 WatchMe Agent release
 
-1. Copy config.example.json to config.json
-2. Fill in server_url and token
-3. Run WatchMeAgent.exe
-4. The agent will stay in the system tray
-5. install-startup.ps1 and uninstall-agent.ps1 are included
+1. Run install-agent.ps1
+2. Fill in server_url and token if config.json still has placeholder values
+3. The agent will stay in the system tray
+4. install-startup.ps1 and uninstall-agent.ps1 are included
 
 Logs are written to .\logs\agent.log
 "@

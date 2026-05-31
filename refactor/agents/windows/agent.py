@@ -218,6 +218,13 @@ def open_path(path: Path) -> None:
     os.startfile(str(path))
 
 
+def show_error_dialog(message: str, title: str = "WatchMe Agent") -> None:
+    try:
+        user32.MessageBoxW(None, str(message), title, 0x10 | 0x1000)
+    except Exception:
+        pass
+
+
 def acquire_single_instance() -> int | None:
     handle = kernel32.CreateMutexW(None, False, SINGLE_INSTANCE_NAME)
     if not handle:
@@ -313,6 +320,7 @@ class AgentRuntime:
         self._reload_event = threading.Event()
         self._reload_event.set()
         self._icon: Any = None
+        self._last_user_error: str | None = None
         self._thread = threading.Thread(target=self._thread_main, name="watchme-monitor", daemon=True)
 
     def start(self) -> None:
@@ -379,6 +387,7 @@ class AgentRuntime:
         except Exception as exc:  # pragma: no cover - top-level protection
             log.exception("fatal error: %s", exc)
             self._set_snapshot(last_error=str(exc), current_app="Stopped")
+            self._notify_user_error(f"WatchMe Agent stopped unexpectedly.\n\n{exc}")
 
     async def _sleep(self, seconds: float) -> None:
         deadline = time.monotonic() + seconds
@@ -416,10 +425,16 @@ class AgentRuntime:
                     previous_idle = False
                     last_report_time = 0.0
                     self._reload_event.clear()
+                    self._clear_user_error()
                     self._set_snapshot(config_loaded=True, current_app="Connected", current_title="", current_music="", last_error=None)
                 except Exception as exc:
                     reporter = None
                     self._set_snapshot(config_loaded=False, current_app="Config required", last_error=str(exc))
+                    self._notify_user_error(
+                        "WatchMe Agent could not start reporting yet.\n\n"
+                        f"{exc}\n\n"
+                        "Open config.json, fix the value, then use 'Reload config' from the tray."
+                    )
                     await self._sleep(5)
                     continue
 
@@ -513,6 +528,20 @@ class AgentRuntime:
         except Exception:
             pass
 
+    def _notify_user_error(self, message: str) -> None:
+        should_show = False
+        with self._lock:
+            if self._last_user_error != message:
+                self._last_user_error = message
+                should_show = True
+
+        if should_show:
+            threading.Thread(target=show_error_dialog, args=(message,), name="watchme-alert", daemon=True).start()
+
+    def _clear_user_error(self) -> None:
+        with self._lock:
+            self._last_user_error = None
+
 
 def create_tray_icon() -> Any:
     if pystray is None or Image is None or ImageDraw is None:
@@ -601,6 +630,7 @@ def main() -> int:
         return 0
     except Exception as exc:
         log.exception("fatal error: %s", exc)
+        show_error_dialog(f"WatchMe Agent exited with a fatal error.\n\n{exc}")
         return 1
     finally:
         release_single_instance(instance_handle)
