@@ -78,7 +78,7 @@
 | P5-002 | done | Windows 前台窗口采集 | 能输出 app_id 和 window_title。 |
 | P5-003 | done | Windows Reporter | 能向本地 server 上报。 |
 | P5-004 | done | 建立 macOS Agent 目录 | 有配置、采集、上报模块骨架。 |
-| P5-005 | doing | macOS 前台窗口采集 | 代码已实现 AppleScript 采集；仍需要实机 Accessibility 权限验证。 |
+| P5-005 | done | macOS 前台窗口采集 | 已在本机验证 AppleScript 前台应用、可见应用、idle 和电池采集。 |
 | P5-006 | done | macOS Reporter | 本地 HTTP 测试覆盖 health、device auth 和 report 上报闭环。 |
 | P5-007 | done | Windows 媒体变化独立触发上报 | 切歌不依赖前台窗口切换。 |
 | P5-008 | done | Windows 托盘和安装体验 | 有托盘菜单、配置入口和安装说明。 |
@@ -87,7 +87,7 @@
 | P5-011 | done | Windows Agent 一键安装入口 | 解压后可直接执行脚本完成配置模板、自启注册和首次启动。 |
 | P5-012 | done | Windows Agent 图形管理器 | 有可见界面统一处理配置、连接测试、启动停止和开机自启。 |
 | P5-013 | done | macOS 安装和自启动体验 | 已提供图形管理器、launchd 自启动安装 / 卸载脚本和 `.app` 打包脚本。 |
-| P5-014 | doing | macOS 媒体播放器实机适配 | Spotify、Apple Music、QQ 音乐、网易云音乐已接入；QQ / 网易云仍需实机确认脚本接口和窗口标题格式。 |
+| P5-014 | doing | macOS 媒体播放器实机适配 | Spotify、Apple Music 已接入；QQ 音乐、网易云音乐已做脚本和窗口标题 fallback，但仍需按真实应用表现继续调整。 |
 | P5-015 | todo | macOS 长时间稳定性试跑 | 打包后至少连续运行 24 小时，观察日志、权限、launchd 重启和上报稳定性。 |
 
 ## P6：部署

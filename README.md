@@ -2,11 +2,11 @@
 
 WatchMe 是一个隐私优先的个人状态仪表盘，用来在自己的网页上展示“我现在大概在做什么”。它由桌面 Agent、轻量后端和网页仪表盘组成：Agent 采集当前活动，后端负责隐私处理和存储，前端展示当前状态、设备在线情况和近期时间线。
 
-这个仓库是 WatchMe 的正式项目仓库。顶层目录现在只保留入口文件、工程配置和源码目录；需求、架构、进度和历史分析都整理到了 [`docs/`](./docs/README.md)。
+这个仓库是 WatchMe 的正式项目仓库。顶层目录保留入口文件、工程配置和源码目录；需求、架构、进度和任务清单整理在 [`docs/`](./docs/README.md)。
 
 ## 当前状态
 
-当前仓库已经不是空设计稿，而是一版可交付的 Windows + Server + Web 成品线：
+当前仓库已经形成一版可交付的 Windows + macOS + Server + Web 成品线：
 
 - `Node 22 + npm` workspace
 - `packages/shared`：共享 schema、类型和日期工具
@@ -85,6 +85,8 @@ npm run check:release -- http://127.0.0.1:3212
 - `npm run build`
 - `npm run package:server`
 - `.\refactor\scripts\server\deploy-server.ps1`
+- `python3 -m unittest refactor/agents/macos/test_agent_config.py refactor/agents/macos/test_manager_helpers.py`
+- `refactor/agents/macos/build.sh`
 
 ## 目录结构
 
@@ -92,7 +94,7 @@ npm run check:release -- http://127.0.0.1:3212
 watchme/
   README.md                # 项目入口和快速运行说明
   AGENTS.md                # 后续 Agent 接手入口
-  docs/                    # 需求、架构、进度、路线图和分析附录
+  docs/                    # 需求、架构、进度、路线图和任务清单
   refactor/                # 正式源码
   .env.example             # 本地环境变量模板
   package.json             # workspace 脚本入口
@@ -111,10 +113,6 @@ docs/
   IMPLEMENTATION_BACKLOG.md
   REFACTORING_ROADMAP.md
   BRANCH_STRATEGY.md
-  analysis/
-    CURRENT_API_AND_DATA.md
-    PROJECT_ANALYSIS.md
-    UPSTREAM_BRANCH_ANALYSIS.md
 ```
 
 ## 核心模块
@@ -147,17 +145,13 @@ refactor/
 - [部署文档](./refactor/docs/deployment.md)
 - [开发路线图](./docs/REFACTORING_ROADMAP.md)
 - [分支策略](./docs/BRANCH_STRATEGY.md)
-- [旧 API 兼容参考](./docs/analysis/CURRENT_API_AND_DATA.md)
-- [旧实现分析](./docs/analysis/PROJECT_ANALYSIS.md)
-- [上游分支调研](./docs/analysis/UPSTREAM_BRANCH_ANALYSIS.md)
 
 ## 开发原则
 
 1. 新代码只在 `refactor/` 中开发。
-2. 历史实现只保留为分析文档，不作为源码目录参与开发。
-3. 默认保守处理隐私；展示更多信息必须显式允许。
-4. 先完成稳定核心，再做额外视觉实验。
-5. 开发期不以 Docker 作为主循环，优先使用直接运行和部署脚本。
+2. 默认保守处理隐私；展示更多信息必须显式允许。
+3. 先完成稳定核心，再做额外视觉实验。
+4. 开发期不以 Docker 作为主循环，优先使用直接运行和部署脚本。
 
 ## 进度追踪
 

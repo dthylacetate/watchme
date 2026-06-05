@@ -11,12 +11,6 @@
 - [REFACTORING_ROADMAP.md](./REFACTORING_ROADMAP.md)：路线图和阶段拆分
 - [BRANCH_STRATEGY.md](./BRANCH_STRATEGY.md)：分支和协作策略
 
-## 分析附录
-
-- [analysis/CURRENT_API_AND_DATA.md](./analysis/CURRENT_API_AND_DATA.md)：旧 API 和数据模型兼容参考
-- [analysis/PROJECT_ANALYSIS.md](./analysis/PROJECT_ANALYSIS.md)：历史实现分析
-- [analysis/UPSTREAM_BRANCH_ANALYSIS.md](./analysis/UPSTREAM_BRANCH_ANALYSIS.md)：上游分支调研和取舍
-
 ## 相关入口
 
 - [仓库入口 README](../README.md)

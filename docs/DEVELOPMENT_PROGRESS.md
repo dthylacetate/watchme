@@ -1,15 +1,15 @@
 # WatchMe 开发进度
 
-更新时间：2026-06-01
+更新时间：2026-06-05
 
 ## 当前阶段
 
-阶段 1.6：核心 MVP 已可运行，开始补齐 macOS Agent。
+阶段 1.7：Windows / macOS / Server / Web 成品线已可运行，进入稳定性试跑和细节打磨。
 
-当前 Windows / Server / Web 已完成一轮可交付打磨，macOS Agent 已进入实现阶段。
+当前 Windows / Server / Web 已上线运行，macOS Agent 已完成 Worker、管理器、自启动、打包和本机联调。
 
-1. 在 macOS 实机上验证 AppleScript / Accessibility / pmset / ioreg 采集稳定性。
-2. 根据试跑结果补 launchd 自启动、打包或图形配置入口。
+1. 做 macOS 长时间稳定性试跑，观察日志、launchd、自启动和上报连续性。
+2. 根据真实播放器表现继续打磨 QQ 音乐 / 网易云音乐等播放器识别细节。
 
 ## 已完成
 
@@ -21,15 +21,12 @@
 - 写入目标架构文档。
 - 写入开发路线图。
 - 写入分支策略。
-- 下载并归档参考分支快照。
-- 分析 Windows/macOS Agent 参考实现。
-- 分析两个前端设计参考分支。
 - 初始化 `refactor/` workspace。
 - 选定 `Node 22 + npm + Next + Hono + node:sqlite` 技术栈。
 - 建立 `shared` / `privacy` / `db` / `app-catalog` 模块。
 - 建立并通过 schema / privacy / server 集成测试。
 - 实现后端 MVP 路由。
-- 实现更贴近参考样例风格的前端页面。
+- 实现完整的前端仪表盘页面。
 - 实现静态导出前端页面。
 - 建立 Windows Agent 基础脚本和打包脚本。
 - 增加 Windows 开机自启安装脚本。
@@ -53,7 +50,7 @@
 - 增加 Windows Agent 图形管理器，集中处理 URL / token 配置、启动停止和开机自启。
 - 增加 Server Windows 图形管理器和命令行交互管理器，集中处理 `.env`、启动停止和健康检查。
 - 整理 `refactor/scripts/` 目录，拆分为 `build/` 和 `server/` 两组脚本。
-- 整理仓库根目录文档，把需求、架构、进度、路线图和分析附录统一迁移到 `docs/`。
+- 整理仓库根目录文档，把需求、架构、进度、路线图和任务清单统一迁移到 `docs/`。
 - 修复 Windows Agent 本地直连 server 时的健康检查兼容性：本地 URL 统一归一化并绕过系统代理，502 报错会带回响应内容。
 - 增加 `/api/device` 鉴权检查接口，并让 Windows Agent Manager 的 `Test Connection` 同时验证 URL 和 token。
 - 修复背景音乐时间膨胀和同播放器歌曲被合并的问题；前端背景音乐区改为只显示累计播放时长和当前播放内容。
@@ -61,8 +58,8 @@
 - Agent Manager 增加后台 Worker 状态轮询；默认离线阈值调整为 120 秒，避免心跳间隔内误判离线。
 - Foreground Summary 改为基于“今天运行过的可见应用”统计，后台仍打开的应用会继续累计；QQ 音乐等播放器只进入 Background Music，不再混入应用摘要。
 - 前端访客计数改为浏览器生成 viewer id 后上报，避免同一来源地址下永远只显示 1 人正在看。
-- 扩展应用状态文案，按聊天、浏览器、IDE、设计、视频、音乐、游戏、办公等类别生成更贴近参考稿的轻松描述。
-- 应用状态文案进一步直接对齐参考实现的大字典和标题模板，并增加别名 / 子串匹配，提升命中率。
+- 扩展应用状态文案，按聊天、浏览器、IDE、设计、视频、音乐、游戏、办公等类别生成更自然的描述。
+- 应用状态文案进一步补充大字典和标题模板，并增加别名 / 子串匹配，提升命中率。
 - 后端应用目录补充常见中文软件和系统工具的中文显示名，让新上报数据能直接展示 `微信`、`钉钉`、`腾讯会议`、`文件资源管理器` 等名称。
 - 部署指南补充 Linux 端口访问完整流程：从 clone、release、`.env`、防火墙、systemd 到后续 `git pull` 更新重启。
 - 完成 `npm run typecheck`、`npm run test`、`npm run build`。
@@ -74,6 +71,8 @@
 - 增加 macOS Agent 图形管理器，支持配置保存、连接测试、启动 / 停止 Worker、开机自启开关和 server `.env` token 提示。
 - 增加 macOS launchd 自启动安装 / 卸载脚本，并补 PyInstaller `.app` 打包脚本。
 - macOS Agent 的后台音乐采集补充 QQ 音乐和网易云音乐；音乐播放器默认不进入 `open_apps` 用量统计，继续走服务端已有 Background Music 时间线。
+- 修复 macOS 打包后 `.app` 配置路径定位问题，Worker 会读取外层 release 目录里的 `config.json`。
+- 完成 macOS Agent 本机验证：单元测试、Reporter 本地 HTTP 上报、真实前台 / open apps / idle / 电池采集、Worker 主循环和 release 打包烟测。
 
 ## 当前文档状态
 
@@ -91,7 +90,7 @@
 
 ## 正在推进
 
-第二批开发任务：
+当前后续任务：
 
 1. macOS 实机连续运行稳定性试跑。
 2. 根据试跑结果继续打磨 macOS 权限提示、播放器细节和签名 / 公证体验。
@@ -106,19 +105,6 @@
 - Pixel Room 主视图。
 
 ## 决策记录
-
-### 2026-05-31：WatchMe 作为独立项目推进
-
-决定：
-
-- README 和需求文档从独立项目视角书写。
-- 历史调研已收敛为分析文档，不再把上游快照目录保留在仓库里。
-- 正式代码只进入 `refactor/`。
-
-理由：
-
-- 避免新项目被旧实现的目录结构和历史包袱牵着走。
-- 方便后续 Agent 直接读取文档开始开发。
 
 ### 2026-05-31：暂用单主线 `main`
 
@@ -163,7 +149,7 @@
 
 理由：
 
-- 参考实现只用前台窗口心跳推断时长，导致挂着 QQ 音乐但焦点一直停在 QQ / 浏览器时，歌曲状态和听歌时长都不可靠。
+- 只用前台窗口心跳推断时长会导致后台播放状态不可靠，例如挂着 QQ 音乐但焦点一直停在 QQ / 浏览器时，歌曲状态和听歌时长都不准确。
 - “我在做什么”和“我在听什么”本来就是两个并行信号，分开建模更自然，也更利于后续做 richer UI。
 
 ### 2026-05-31：交付形态改为 Agent 可执行文件 + Server 一键部署
@@ -178,6 +164,20 @@
 - 用户更需要可直接分发和启动的 Agent，而不是源码环境。
 - Server 侧更适合脚本化部署，避免每次部署都重新手工拼目录和依赖。
 
+### 2026-06-05：macOS Agent 进入可运行交付线
+
+决定：
+
+- macOS Agent 采用 Worker + 图形管理器 + launchd 自启动脚本的交付形态。
+- 打包产物优先提供 `WatchMeAgentWorker.app`；管理器在当前构建环境下通过 `WatchMeAgent.command` 调用系统 Python 运行。
+- macOS 端不要求服务端代码升级，只使用现有 `/api/health`、`/api/device` 和 `/api/report`。
+
+理由：
+
+- 保持线上 server 和 Windows Agent 稳定，降低部署压力。
+- 当前 PyInstaller 环境无法可靠打包 tkinter，使用 `.command` 比交付不可用的管理器 `.app` 更稳。
+- 后台音乐统计已经由服务端现有媒体时间线支持，macOS 只需要上报 `extra.music`。
+
 ## 下一次 Agent 接手建议
 
 读取顺序：
@@ -187,4 +187,4 @@
 3. `PROJECT_ARCHITECTURE.md`
 4. `IMPLEMENTATION_BACKLOG.md`
 
-然后从 Backlog 的 P5 和 P6 开始。
+然后从 Backlog 的 P5-014 / P5-015 开始。
