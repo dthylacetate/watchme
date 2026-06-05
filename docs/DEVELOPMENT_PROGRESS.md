@@ -4,12 +4,12 @@
 
 ## 当前阶段
 
-阶段 1.5：核心 MVP 已可运行，进入补强和部署阶段。
+阶段 1.6：核心 MVP 已可运行，开始补齐 macOS Agent。
 
-当前按最新决定，macOS Agent 暂缓，先把 Windows / Server / Web 收尾打磨完。
+当前 Windows / Server / Web 已完成一轮可交付打磨，macOS Agent 已进入实现阶段。
 
-1. 做一轮连续试跑，确认托盘 Agent 和 release 部署稳定。
-2. 根据试跑结果继续补细节。
+1. 在 macOS 实机上验证 AppleScript / Accessibility / pmset / ioreg 采集稳定性。
+2. 根据试跑结果补 launchd 自启动、打包或图形配置入口。
 
 ## 已完成
 
@@ -69,6 +69,11 @@
 - 完成 `npm run package:server` 和 `refactor/scripts/server/deploy-server.ps1` 实跑验证。
 - 将后台音乐从前台活动统计中拆出独立时间线，修复“挂着 QQ 音乐但焦点不在它时不计时”的核心问题。
 - 修复 Windows Agent 开机自启脚本，改用当前用户 Startup 快捷方式，避免普通用户注册计划任务时遇到权限问题，并兼容清理旧版本计划任务。
+- 建立 macOS Agent Worker：配置模板、Reporter、菜单栏入口、单实例保护、前台窗口采集、可见应用列表、idle、电池、全屏 / 音频辅助判断、Spotify / Apple Music 当前播放读取。
+- 增加 macOS Agent 单元测试，覆盖配置校验、URL 归一化、`ioreg` / `pmset` 输出解析、音乐解析和本地 HTTP Reporter 上报闭环。
+- 增加 macOS Agent 图形管理器，支持配置保存、连接测试、启动 / 停止 Worker、开机自启开关和 server `.env` token 提示。
+- 增加 macOS launchd 自启动安装 / 卸载脚本，并补 PyInstaller `.app` 打包脚本。
+- macOS Agent 的后台音乐采集补充 QQ 音乐和网易云音乐；音乐播放器默认不进入 `open_apps` 用量统计，继续走服务端已有 Background Music 时间线。
 
 ## 当前文档状态
 
@@ -88,8 +93,8 @@
 
 第二批开发任务：
 
-1. 连续运行稳定性试跑。
-2. 根据试跑结果继续打磨托盘、部署和 UI 细节。
+1. macOS 实机连续运行稳定性试跑。
+2. 根据试跑结果继续打磨 macOS 权限提示、播放器细节和签名 / 公证体验。
 
 ## 暂不做
 

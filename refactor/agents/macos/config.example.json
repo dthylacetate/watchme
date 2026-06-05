@@ -1,0 +1,7 @@
+{
+  "server_url": "http://127.0.0.1:3000",
+  "token": "replace-with-device-token",
+  "interval_seconds": 5,
+  "heartbeat_seconds": 60,
+  "idle_threshold_seconds": 300
+}

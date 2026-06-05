@@ -15,6 +15,7 @@ WatchMe 是一个隐私优先的个人状态仪表盘，用来在自己的网页
 - `apps/server`：`/api/health`、`/api/config`、`/api/report`、`/api/current`、`/api/timeline`
 - `apps/web`：当前状态、设备列表、前台活动时间线、后台音乐时间线
 - `agents/windows`：可打包的 Agent 管理器和后台托盘 Worker
+- `agents/macos`：Agent Worker、图形管理器、launchd 自启动脚本和 `.app` 打包脚本
 - `refactor/scripts/server`：部署、检查、备份、管理和 soak 脚本
 
 关键改进点是：前台活动和后台音乐已经拆成两条独立状态流，不会再出现“QQ 音乐在后台播放但时长不增长”的问题。
@@ -125,7 +126,7 @@ refactor/
     web/             # 仪表盘前端
   agents/
     windows/         # Windows Agent、管理器、打包脚本
-    macos/           # macOS 占位目录
+    macos/           # macOS Agent、管理器、自启动和打包脚本
   packages/
     shared/          # API schema、通用类型、日期工具
     privacy/         # 标题处理和隐私规则
