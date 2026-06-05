@@ -18,8 +18,6 @@ WatchMe 是一个隐私优先的个人状态仪表盘，用来在自己的网页
 - `agents/macos`：Agent Worker、图形管理器、launchd 自启动脚本和 `.app` 打包脚本
 - `refactor/scripts/server`：部署、检查、备份、管理和 soak 脚本
 
-关键改进点是：前台活动和后台音乐已经拆成两条独立状态流，不会再出现“QQ 音乐在后台播放但时长不增长”的问题。
-
 正式源码位于 [refactor/](./refactor/README.md)。
 
 ## 快速运行
